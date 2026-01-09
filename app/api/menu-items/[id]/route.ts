@@ -4,11 +4,11 @@ import { supabase } from '@/lib/supabase';
 // PATCH update menu item
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
         const body = await request.json();
-        const { id } = params;
+        const { id } = await context.params;
 
         const { data, error } = await supabase
             .from('menu_items')
@@ -32,10 +32,10 @@ export async function PATCH(
 // DELETE menu item
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = params;
+        const { id } = await context.params;
 
         const { error } = await supabase
             .from('menu_items')
