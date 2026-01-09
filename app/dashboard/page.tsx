@@ -8,6 +8,7 @@ export default function DashboardPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedTable, setSelectedTable] = useState<number | null>(null);
+    const [showMap, setShowMap] = useState(true);
 
     // Fetch orders from API
     useEffect(() => {
@@ -123,27 +124,36 @@ export default function DashboardPage() {
                 backgroundColor: 'white'
             }}>
                 <div
+                    onClick={() => setShowMap(!showMap)}
                     style={{
                         padding: '0.75rem 1rem',
-                        borderBottom: '1px solid #f1f5f9',
+                        borderBottom: showMap ? '1px solid #f1f5f9' : 'none',
                         fontSize: '0.9rem',
                         fontWeight: 600,
                         color: '#64748b',
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        userSelect: 'none'
                     }}
                 >
-                    <span>Restaurant Overview (Read-Only)</span>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>Click table to filter</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>{showMap ? '▼' : '▶'}</span>
+                        <span>Restaurant Overview (Read-Only)</span>
+                    </div>
+                    {showMap && <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>Click table to filter</span>}
                 </div>
-                <FloorPlan
-                    activeTables={activeTableNumbers}
-                    onTableClick={(id) => setSelectedTable(prev => prev === id ? null : id)}
-                    readOnly={true}
-                    scale={0.5}
-                    height={300}
-                />
+
+                {showMap && (
+                    <FloorPlan
+                        activeTables={activeTableNumbers}
+                        onTableClick={(id) => setSelectedTable(prev => prev === id ? null : id)}
+                        readOnly={true}
+                        scale={0.5}
+                        height={300}
+                    />
+                )}
             </div>
 
             <div className="orders-grid" style={{

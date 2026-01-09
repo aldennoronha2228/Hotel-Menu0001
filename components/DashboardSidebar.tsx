@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SignOutButton } from '@clerk/nextjs';
 
 export default function DashboardSidebar() {
     const pathname = usePathname();
+    const [isOpen, setIsOpen] = useState(false);
 
     const navItems = [
         { href: '/dashboard', label: 'Live Orders' },
@@ -15,41 +17,69 @@ export default function DashboardSidebar() {
     ];
 
     return (
-        <aside className="sidebar">
-            <div className="sidebar-logo">
-                <h1>Dashboard</h1>
-            </div>
-            <nav>
-                <ul className="sidebar-nav">
-                    {navItems.map(item => (
-                        <li key={item.href}>
-                            <Link
-                                href={item.href}
-                                className={pathname === item.href ? 'active' : ''}
-                            >
-                                {item.label}
-                            </Link>
+        <>
+            {/* Mobile Toggle Button */}
+            <button
+                className="mobile-menu-toggle"
+                onClick={() => setIsOpen(true)}
+                aria-label="Open Menu"
+            >
+                <span style={{ fontSize: '1.5rem' }}>☰</span>
+            </button>
+
+            {/* Overlay */}
+            <div
+                className={`sidebar-overlay ${isOpen ? 'active' : ''}`}
+                onClick={() => setIsOpen(false)}
+            />
+
+            <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+                <div className="sidebar-logo">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h1>Dashboard</h1>
+                        {/* Close button for mobile inside sidebar */}
+                        <button
+                            className="mobile-menu-toggle"
+                            style={{ position: 'static', display: 'block', border: 'none', boxShadow: 'none' }}
+                            onClick={() => setIsOpen(false)}
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+                <nav>
+                    <ul className="sidebar-nav">
+                        {navItems.map(item => (
+                            <li key={item.href}>
+                                <Link
+                                    href={item.href}
+                                    className={pathname === item.href ? 'active' : ''}
+                                    onClick={() => setIsOpen(false)}
+                                >
+                                    {item.label}
+                                </Link>
+                            </li>
+                        ))}
+                        <li>
+                            <SignOutButton>
+                                <button style={{
+                                    width: '100%',
+                                    textAlign: 'left',
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: 'var(--spacing-md) var(--spacing-lg)',
+                                    cursor: 'pointer',
+                                    color: 'var(--color-text)',
+                                    fontSize: 'inherit',
+                                    fontFamily: 'inherit'
+                                }}>
+                                    Logout
+                                </button>
+                            </SignOutButton>
                         </li>
-                    ))}
-                    <li>
-                        <SignOutButton>
-                            <button style={{
-                                width: '100%',
-                                textAlign: 'left',
-                                background: 'none',
-                                border: 'none',
-                                padding: 'var(--spacing-md) var(--spacing-lg)',
-                                cursor: 'pointer',
-                                color: 'var(--color-text)',
-                                fontSize: 'inherit',
-                                fontFamily: 'inherit'
-                            }}>
-                                Logout
-                            </button>
-                        </SignOutButton>
-                    </li>
-                </ul>
-            </nav>
-        </aside>
+                    </ul>
+                </nav>
+            </aside>
+        </>
     );
 }
