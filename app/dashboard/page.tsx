@@ -69,21 +69,24 @@ export default function DashboardPage() {
     };
 
     // Filter and Sort orders
+    // Show only ACTIVE orders (new, preparing) in the Live Dashboard
+    const activeOrders = orders.filter(o => o.status !== 'done');
+
     const visibleOrders = selectedTable
-        ? orders.filter(o => parseInt(o.tableNumber) === selectedTable)
-        : orders;
+        ? activeOrders.filter(o => parseInt(o.tableNumber) === selectedTable)
+        : activeOrders;
 
     const sortedOrders = [...visibleOrders].sort((a, b) => {
-        const statusPriority = { preparing: 0, new: 1, done: 2 };
+        const statusPriority = { preparing: 0, new: 1, done: 2 }; // done is technically filtered out but good to keep safe
         if (statusPriority[a.status] !== statusPriority[b.status]) {
             return statusPriority[a.status] - statusPriority[b.status];
         }
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
 
-    // Get active tables for the map
+    // Get active tables for the map (from activeOrders)
     const activeTableNumbers = [...new Set(
-        orders.filter(o => o.status !== 'done').map(o => parseInt(o.tableNumber))
+        activeOrders.map(o => parseInt(o.tableNumber))
     )];
 
     if (loading) return <div style={{ textAlign: 'center', padding: '3rem' }}>Loading orders...</div>;

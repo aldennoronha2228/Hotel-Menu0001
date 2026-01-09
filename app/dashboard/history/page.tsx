@@ -43,7 +43,7 @@ export default function OrderHistoryPage() {
 
         const filtered = orders.filter(order => {
             const orderDate = new Date(order.timestamp).toISOString().split('T')[0];
-            return orderDate === selectedDate;
+            return orderDate === selectedDate && order.status === 'done';
         });
 
         setFilteredOrders(filtered);
