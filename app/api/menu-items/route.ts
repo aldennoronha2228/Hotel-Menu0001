@@ -6,12 +6,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     try {
-        const user = await currentUser();
-        const ownerEmail = process.env.OWNER_EMAIL;
-        const userEmail = user?.emailAddresses?.[0]?.emailAddress;
-
-        const isOwner = ownerEmail && userEmail === ownerEmail && supabaseAdmin;
-        const client = isOwner ? supabaseAdmin! : supabase;
+        // Use Admin client if available to bypass RLS (so we can see Unavailable items)
+        const client = supabaseAdmin || supabase;
 
         const { data, error } = await client
             .from('menu_items')

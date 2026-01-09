@@ -12,7 +12,10 @@ export default function MenuPage({
     searchParams: Promise<{ table?: string }>
 }) {
     const [mounted, setMounted] = useState(false);
-    const [currentCategory, setCurrentCategory] = useState('starters');
+    const [categories, setCategories] = useState<any[]>([]);
+    const [menuItems, setMenuItems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentCategory, setCurrentCategory] = useState('');
     const [cart, setCart] = useState<CartItem[]>([]);
     const [showCart, setShowCart] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
@@ -22,7 +25,32 @@ export default function MenuPage({
     const unwrappedSearchParams = use(searchParams);
 
     const tableNumber = unwrappedSearchParams.table || '0';
-    const menuItems = getMenuItemsByCategory(currentCategory);
+
+    // Fetch Data
+    useEffect(() => {
+        const fetchMenuData = async () => {
+            try {
+                const [catRes, itemRes] = await Promise.all([
+                    fetch('/api/categories'),
+                    fetch('/api/menu-items')
+                ]);
+
+                if (catRes.ok && itemRes.ok) {
+                    const cats = await catRes.json();
+                    const items = await itemRes.json();
+                    setCategories(cats);
+                    setMenuItems(items);
+                    if (cats.length > 0) setCurrentCategory(cats[0].id);
+                }
+            } catch (error) {
+                console.error('Failed to load menu', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMenuData();
+    }, []);
 
     // Set mounted state and load cart from localStorage
     useEffect(() => {
@@ -56,10 +84,7 @@ export default function MenuPage({
         };
     }, [showCart, showConfirmation]);
 
-    const addToCart = (itemId: string) => {
-        const item = getMenuItemById(itemId);
-        if (!item) return;
-
+    const addToCart = (item: any) => {
         setCart([...cart, {
             id: item.id,
             name: item.name,
@@ -133,20 +158,23 @@ export default function MenuPage({
 
     const getTotalItems = () => cart.reduce((sum, item) => sum + item.quantity, 0);
     const getTotalPrice = () => cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
     const getCartItem = (itemId: string) => cart.find(item => item.id === itemId);
+
+    const filteredItems = menuItems.filter(item => item.category_id === currentCategory);
+
+    if (loading) return <div className="p-4 text-center">Loading menu...</div>;
 
     return (
         <>
             {/* Header */}
             <header className="header-customer">
-                <h1>{mockRestaurant.name}</h1>
+                <h1>{mockRestaurant.name} (Online Menu)</h1>
                 <p className="table-number">Table {tableNumber}</p>
             </header>
 
             {/* Category Navigation */}
             <nav className="category-nav">
-                {mockCategories.map(category => (
+                {categories.map(category => (
                     <button
                         key={category.id}
                         className={`category-tab ${currentCategory === category.id ? 'active' : ''}`}
@@ -159,26 +187,32 @@ export default function MenuPage({
 
             {/* Menu Items */}
             <div className="menu-container">
-                {menuItems.length === 0 ? (
+                {filteredItems.length === 0 ? (
                     <p className="text-center text-secondary">No items in this category</p>
                 ) : (
-                    menuItems.map(item => {
+                    filteredItems.map(item => {
                         const cartItem = getCartItem(item.id);
+                        const isAvailable = item.available !== false; // Default true if null
+
                         return (
-                            <div key={item.id} className="menu-item">
+                            <div key={item.id} className={`menu-item ${!isAvailable ? 'unavailable' : ''}`}>
                                 <div className="menu-item-info">
                                     <div className="menu-item-header">
                                         <div className={`veg-indicator ${item.type}`}></div>
                                         <div>
-                                            <h3>{item.name}</h3>
+                                            <h3 style={{ textDecoration: !isAvailable ? 'line-through' : 'none', color: !isAvailable ? '#94a3b8' : 'inherit' }}>{item.name}</h3>
                                             <div className="menu-item-price">₹{item.price}</div>
                                         </div>
                                     </div>
                                     <div className="menu-item-actions">
-                                        {!cartItem ? (
+                                        {!isAvailable ? (
+                                            <button className="btn btn-secondary btn-sm" disabled style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+                                                Sold Out
+                                            </button>
+                                        ) : !cartItem ? (
                                             <button
                                                 className="btn btn-primary btn-sm"
-                                                onClick={() => addToCart(item.id)}
+                                                onClick={() => addToCart(item)}
                                             >
                                                 Add
                                             </button>
@@ -201,8 +235,8 @@ export default function MenuPage({
                                         )}
                                     </div>
                                 </div>
-                                {item.image && (
-                                    <img src={item.image} alt={item.name} className="menu-item-image" />
+                                {item.image_url && (
+                                    <img src={item.image_url} alt={item.name} className="menu-item-image" style={{ filter: !isAvailable ? 'grayscale(100%)' : 'none' }} />
                                 )}
                             </div>
                         );
