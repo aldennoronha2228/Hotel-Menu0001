@@ -9,6 +9,7 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [selectedTable, setSelectedTable] = useState<number | null>(null);
     const [showMap, setShowMap] = useState(true);
+    const [showAll, setShowAll] = useState(false);
 
     // Fetch orders from API
     useEffect(() => {
@@ -85,8 +86,9 @@ export default function DashboardPage() {
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
 
-    // Get active tables for the map (only non-paid orders occupy tables? Or maybe Done tables are still occupied?)
-    // Usually Done = Eating. Paid = Left? Or Paid = Leaving.
+    const displayedOrders = showAll ? sortedOrders : sortedOrders.slice(0, 5);
+
+    // Get active tables for the map
     const activeTableNumbers = [...new Set(
         activeOrders.map(o => parseInt(o.tableNumber))
     )];
@@ -167,7 +169,7 @@ export default function DashboardPage() {
                 gap: '1rem',
                 alignItems: 'start'
             }}>
-                {sortedOrders.map(order => {
+                {displayedOrders.map(order => {
                     const isPreparing = order.status === 'preparing';
                     const isDone = order.status === 'done';
 
@@ -176,7 +178,7 @@ export default function DashboardPage() {
                         backgroundColor: isPreparing ? '#fffbf0' : 'var(--color-bg)',
                         transform: isPreparing ? 'translateY(-4px)' : 'none',
                         boxShadow: isPreparing ? '0 8px 24px rgba(255,153,0,0.15)' : '0 2px 4px rgba(0,0,0,0.05)',
-                        opacity: isDone ? 0.8 : 1, // Increased opacity for readability
+                        opacity: isDone ? 0.8 : 1,
                         fontSize: '0.95rem'
                     };
 
@@ -254,6 +256,30 @@ export default function DashboardPage() {
                     );
                 })}
             </div>
+
+            {!showAll && sortedOrders.length > 5 && (
+                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowAll(true)}
+                        style={{ width: '100%', maxWidth: '300px' }}
+                    >
+                        Show All Orders ({sortedOrders.length - 5} more)
+                    </button>
+                </div>
+            )}
+
+            {showAll && sortedOrders.length > 5 && (
+                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowAll(false)}
+                        style={{ width: '100%', maxWidth: '300px' }}
+                    >
+                        Show Less
+                    </button>
+                </div>
+            )}
 
             {sortedOrders.length === 0 && (
                 <div className="text-center text-secondary" style={{ marginTop: '3rem' }}>
