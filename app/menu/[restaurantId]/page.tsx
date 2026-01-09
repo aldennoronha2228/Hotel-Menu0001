@@ -106,16 +106,24 @@ export default function MenuPage({
                 }),
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                throw new Error('Failed to place order');
+                throw new Error(data.error || 'Failed to place order');
             }
 
+            // Clear cart and show confirmation
             setCart([]);
             setShowCart(false);
             setShowConfirmation(true);
-        } catch (error) {
+
+            // If in demo mode, show a console message
+            if (data.demo) {
+                console.log('Demo Mode:', data.message);
+            }
+        } catch (error: any) {
             console.error('Error placing order:', error);
-            alert('Failed to place order. Please try again.');
+            alert(error.message || 'Failed to place order. Please try again.');
         }
     };
 
