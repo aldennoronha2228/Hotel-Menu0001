@@ -66,9 +66,9 @@ export default function DashboardPage() {
         return `${diffHours}h ${diffMins % 60}m ago`;
     };
 
-    // Sort orders: new first, then preparing, then done
+    // Sort orders: PREPARING first (priority), then NEW, then DONE
     const sortedOrders = [...orders].sort((a, b) => {
-        const statusPriority = { new: 0, preparing: 1, done: 2 };
+        const statusPriority = { preparing: 0, new: 1, done: 2 };
         if (statusPriority[a.status] !== statusPriority[b.status]) {
             return statusPriority[a.status] - statusPriority[b.status];
         }
@@ -92,71 +92,118 @@ export default function DashboardPage() {
                 </p>
             </header>
 
-            <div className="orders-grid">
-                {sortedOrders.map(order => (
-                    <div key={order.id} className={`order-card ${order.status === 'new' ? 'new' : ''}`}>
-                        <div className="order-header">
-                            <div className="table-badge">Table {order.tableNumber}</div>
-                            <div className="order-time">{formatTime(order.timestamp)}</div>
-                        </div>
+            <div className="orders-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '1.5rem',
+                alignItems: 'start' // Prevents stretching
+            }}>
+                {sortedOrders.map(order => {
+                    const isPreparing = order.status === 'preparing';
+                    const isDone = order.status === 'done';
 
-                        <div className={`status-badge ${order.status}`}>
-                            {order.status === 'new' && 'New Order'}
-                            {order.status === 'preparing' && 'Preparing'}
-                            {order.status === 'done' && 'Done'}
-                        </div>
+                    // Dynamic styles based on status
+                    const cardStyle: React.CSSProperties = isPreparing ? {
+                        gridColumn: 'span 2', // Take up 2 columns
+                        transform: 'scale(1.02)',
+                        border: '2px solid var(--color-primary)',
+                        boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                        fontSize: '1.1rem'
+                    } : isDone ? {
+                        opacity: 0.7,
+                        transform: 'scale(0.95)',
+                        fontSize: '0.9rem'
+                    } : {};
 
-                        <div className="order-items">
-                            {order.items.map((item, index) => (
-                                <div key={index} className="order-item">
-                                    <span>{item.name}</span>
-                                    <span className="item-quantity">×{item.quantity}</span>
+                    return (
+                        <div
+                            key={order.id}
+                            className={`order-card ${order.status}`}
+                            style={cardStyle}
+                        >
+                            <div className="order-header" style={{ marginBottom: isPreparing ? '1.5rem' : '1rem' }}>
+                                <div className="table-badge" style={{
+                                    fontSize: isPreparing ? '1.2rem' : '1rem',
+                                    padding: isPreparing ? '0.5rem 1rem' : '0.25rem 0.75rem',
+                                    backgroundColor: isPreparing ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
+                                    color: isPreparing ? 'white' : 'var(--color-text)'
+                                }}>
+                                    Table {order.tableNumber}
                                 </div>
-                            ))}
-                        </div>
+                                <div className="order-time">{formatTime(order.timestamp)}</div>
+                            </div>
 
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '1rem',
-                            fontWeight: 600
-                        }}>
-                            <span>Total</span>
-                            <span>₹{order.total}</span>
-                        </div>
+                            <div className={`status-badge ${order.status}`} style={{ marginBottom: '1rem' }}>
+                                {order.status === 'new' && 'New Order'}
+                                {order.status === 'preparing' && '🔥 PREPARING'}
+                                {order.status === 'done' && 'Done'}
+                            </div>
 
-                        <div className="order-actions">
-                            {order.status === 'new' && (
-                                <button
-                                    className="btn btn-primary btn-sm"
-                                    style={{ flex: 1 }}
-                                    onClick={() => updateOrderStatus(order.id, 'preparing')}
-                                >
-                                    Mark as Preparing
-                                </button>
-                            )}
-                            {order.status === 'preparing' && (
-                                <button
-                                    className="btn btn-primary btn-sm"
-                                    style={{ flex: 1 }}
-                                    onClick={() => updateOrderStatus(order.id, 'done')}
-                                >
-                                    Mark as Done
-                                </button>
-                            )}
-                            {order.status === 'done' && (
-                                <button
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ flex: 1 }}
-                                    disabled
-                                >
-                                    Completed
-                                </button>
-                            )}
+                            <div className="order-items" style={{ marginBottom: isPreparing ? '1.5rem' : '1rem' }}>
+                                {order.items.map((item, index) => (
+                                    <div key={index} className="order-item" style={{
+                                        padding: isPreparing ? '0.75rem 0' : '0.5rem 0',
+                                        fontSize: isPreparing ? '1.1rem' : '1rem'
+                                    }}>
+                                        <span>{item.name}</span>
+                                        <span className="item-quantity" style={{
+                                            backgroundColor: isPreparing ? 'var(--color-primary-light)' : '#eee',
+                                            fontSize: isPreparing ? '1rem' : '0.85rem'
+                                        }}>×{item.quantity}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginBottom: isPreparing ? '1.5rem' : '1rem',
+                                fontWeight: 600,
+                                fontSize: isPreparing ? '1.25rem' : '1rem'
+                            }}>
+                                <span>Total</span>
+                                <span>₹{order.total}</span>
+                            </div>
+
+                            <div className="order-actions">
+                                {order.status === 'new' && (
+                                    <button
+                                        className="btn btn-primary"
+                                        style={{ flex: 1 }}
+                                        onClick={() => updateOrderStatus(order.id, 'preparing')}
+                                    >
+                                        Start Preparing
+                                    </button>
+                                )}
+                                {order.status === 'preparing' && (
+                                    <button
+                                        className="btn btn-success"
+                                        style={{
+                                            flex: 1,
+                                            backgroundColor: '#10b981',
+                                            color: 'white',
+                                            padding: '1rem',
+                                            fontSize: '1.1rem'
+                                        }}
+                                        onClick={() => updateOrderStatus(order.id, 'done')}
+                                    >
+                                        ✅ Mark as Done
+                                    </button>
+                                )}
+                                {order.status === 'done' && (
+                                    <button
+                                        className="btn btn-secondary btn-sm"
+                                        style={{ flex: 1 }}
+                                        disabled
+                                    >
+                                        Completed
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {sortedOrders.length === 0 && (

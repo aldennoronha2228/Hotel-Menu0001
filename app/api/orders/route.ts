@@ -79,13 +79,18 @@ export async function POST(request: NextRequest) {
         if (orderError) throw orderError;
 
         // Insert order items
-        const orderItems = items.map((item: any) => ({
-            order_id: order.id,
-            menu_item_id: item.id,
-            item_name: item.name,
-            item_price: item.price,
-            quantity: item.quantity
-        }));
+        const orderItems = items.map((item: any) => {
+            // Check if ID is a valid UUID
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
+
+            return {
+                order_id: order.id,
+                menu_item_id: isUuid ? item.id : null,
+                item_name: item.name,
+                item_price: item.price,
+                quantity: item.quantity
+            };
+        });
 
         const { error: itemsError } = await supabase
             .from('order_items')
