@@ -54,6 +54,25 @@ export default function DashboardPage() {
         }
     };
 
+    const deleteOrder = async (orderId: string) => {
+        if (!confirm('Are you sure you want to delete this order?')) return;
+
+        try {
+            const response = await fetch(`/api/orders/${orderId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                setOrders(orders.filter(order => order.id !== orderId));
+            } else {
+                throw new Error('Failed to delete');
+            }
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            alert('Failed to delete order');
+        }
+    };
+
     const formatTime = (timestamp: string) => {
         const date = new Date(timestamp);
         const now = new Date();
@@ -122,15 +141,40 @@ export default function DashboardPage() {
                             style={cardStyle}
                         >
                             <div className="order-header" style={{ marginBottom: isPreparing ? '1.5rem' : '1rem' }}>
-                                <div className="table-badge" style={{
-                                    fontSize: isPreparing ? '1.2rem' : '1rem',
-                                    padding: isPreparing ? '0.5rem 1rem' : '0.25rem 0.75rem',
-                                    backgroundColor: isPreparing ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
-                                    color: isPreparing ? 'white' : 'var(--color-text)'
-                                }}>
-                                    Table {order.tableNumber}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <div className="table-badge" style={{
+                                            fontSize: isPreparing ? '1.2rem' : '1rem',
+                                            padding: isPreparing ? '0.5rem 1rem' : '0.25rem 0.75rem',
+                                            backgroundColor: isPreparing ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
+                                            color: isPreparing ? 'white' : 'var(--color-text)'
+                                        }}>
+                                            Table {order.tableNumber}
+                                        </div>
+                                        <div className="order-time">{formatTime(order.timestamp)}</div>
+                                    </div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteOrder(order.id);
+                                        }}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#ef4444',
+                                            cursor: 'pointer',
+                                            fontSize: '1.2rem',
+                                            padding: '0.2rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            opacity: 0.7
+                                        }}
+                                        title="Delete Order"
+                                    >
+                                        🗑️
+                                    </button>
                                 </div>
-                                <div className="order-time">{formatTime(order.timestamp)}</div>
                             </div>
 
                             <div className={`status-badge ${order.status}`} style={{ marginBottom: '1rem' }}>

@@ -29,3 +29,28 @@ export async function PATCH(
         );
     }
 }
+
+// DELETE order
+export async function DELETE(
+    request: NextRequest,
+    context: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await context.params;
+
+        const { error } = await supabase
+            .from('orders')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        return NextResponse.json(
+            { error: 'Failed to delete order' },
+            { status: 500 }
+        );
+    }
+}
