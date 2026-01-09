@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
 // GET all menu items with categories
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     try {
-        const { data, error } = await supabase
+        const user = await currentUser();
+        const ownerEmail = process.env.OWNER_EMAIL;
+        const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+
+        const isOwner = ownerEmail && userEmail === ownerEmail && supabaseAdmin;
+        const client = isOwner ? supabaseAdmin! : supabase;
+
+        const { data, error } = await client
             .from('menu_items')
             .select(`
         *,
