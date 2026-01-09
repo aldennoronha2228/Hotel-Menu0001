@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized: You are not the owner' }, { status: 401 });
         }
 
-        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-            console.error('SUPABASE_SERVICE_ROLE_KEY not set');
+        if (!supabaseAdmin) {
+            console.error('SUPABASE_SERVICE_ROLE_KEY not set (admin client null)');
             return NextResponse.json({ error: 'Server Database Config Missing' }, { status: 500 });
         }
 

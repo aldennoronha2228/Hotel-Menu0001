@@ -17,6 +17,7 @@ export async function PATCH(
     context: { params: Promise<{ id: string }> }
 ) {
     if (!await checkOwner()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!supabaseAdmin) return NextResponse.json({ error: 'Server Config Missing' }, { status: 500 });
 
     try {
         const body = await request.json();
@@ -51,6 +52,7 @@ export async function DELETE(
     context: { params: Promise<{ id: string }> }
 ) {
     if (!await checkOwner()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!supabaseAdmin) return NextResponse.json({ error: 'Server Config Missing' }, { status: 500 });
 
     try {
         const { id } = await context.params;
