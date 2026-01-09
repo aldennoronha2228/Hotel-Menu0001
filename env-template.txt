@@ -1,0 +1,17 @@
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# ImageKit.io
+NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY=public_...
+IMAGEKIT_PRIVATE_KEY=private_...
+NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your_imagekit_id
+
+# Restaurant
+NEXT_PUBLIC_RESTAURANT_ID=rest001
