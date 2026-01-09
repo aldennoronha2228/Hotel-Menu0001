@@ -96,13 +96,14 @@ export default function MenuManagementPage() {
                     category_id: categories[0]?.id || '',
                     type: 'veg'
                 });
-                fetchData(); // Refresh to ensure Sort/Join is correct
+                fetchData();
             } else {
-                alert('Failed to add item');
+                const errorData = await response.json().catch(() => ({}));
+                alert(`Failed to add item: ${errorData.error || response.statusText}`);
             }
         } catch (error) {
             console.error('Error adding item:', error);
-            alert('Error adding item');
+            alert('Error adding item: ' + (error instanceof Error ? error.message : String(error)));
         }
     };
 

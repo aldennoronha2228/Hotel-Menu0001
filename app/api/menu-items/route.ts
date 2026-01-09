@@ -38,8 +38,19 @@ export async function POST(request: NextRequest) {
         const ownerEmail = process.env.OWNER_EMAIL;
         const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-        if (!ownerEmail || userEmail !== ownerEmail) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (!ownerEmail) {
+            console.error('OWNER_EMAIL not set in environment variables');
+            return NextResponse.json({ error: 'Server Authorization Config Missing' }, { status: 500 });
+        }
+
+        if (userEmail !== ownerEmail) {
+            console.warn(`Unauthorized access attempt by ${userEmail} (expected ${ownerEmail})`);
+            return NextResponse.json({ error: 'Unauthorized: You are not the owner' }, { status: 401 });
+        }
+
+        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            console.error('SUPABASE_SERVICE_ROLE_KEY not set');
+            return NextResponse.json({ error: 'Server Database Config Missing' }, { status: 500 });
         }
 
         const body = await request.json();
