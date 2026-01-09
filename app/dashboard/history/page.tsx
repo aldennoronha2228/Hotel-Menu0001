@@ -49,6 +49,22 @@ export default function OrderHistoryPage() {
         setFilteredOrders(filtered);
     };
 
+    const deleteOrder = async (orderId: string) => {
+        if (!confirm('Are you sure you want to delete this order from history? This action cannot be undone.')) return;
+        try {
+            const response = await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
+            if (response.ok) {
+                // Remove from local state immediately
+                setOrders(prev => prev.filter(order => order.id !== orderId));
+            } else {
+                alert('Failed to delete order. Please check your connection or permissions.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Failed to delete order.');
+        }
+    };
+
     const formatTime = (timestamp: string) => {
         const date = new Date(timestamp);
         return date.toLocaleTimeString('en-IN', {
@@ -181,6 +197,7 @@ export default function OrderHistoryPage() {
                                 <th style={{ padding: 'var(--spacing-md)', textAlign: 'left' }}>Items</th>
                                 <th style={{ padding: 'var(--spacing-md)', textAlign: 'left' }}>Status</th>
                                 <th style={{ padding: 'var(--spacing-md)', textAlign: 'right' }}>Total</th>
+                                <th style={{ padding: 'var(--spacing-md)', textAlign: 'center' }}>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -206,10 +223,24 @@ export default function OrderHistoryPage() {
                                             {order.status === 'new' && 'New'}
                                             {order.status === 'preparing' && 'Preparing'}
                                             {order.status === 'done' && 'Done'}
+                                            {order.status === 'paid' && 'Paid'}
                                         </span>
                                     </td>
                                     <td style={{ padding: 'var(--spacing-md)', textAlign: 'right', fontWeight: 600 }}>
                                         ₹{order.total}
+                                    </td>
+                                    <td style={{ padding: 'var(--spacing-md)', textAlign: 'center' }}>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); deleteOrder(order.id); }}
+                                            style={{
+                                                background: 'none', border: 'none', color: '#ef4444',
+                                                cursor: 'pointer', fontSize: '1.2rem', padding: '0.2rem',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.7
+                                            }}
+                                            title="Delete From History"
+                                        >
+                                            🗑️
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
