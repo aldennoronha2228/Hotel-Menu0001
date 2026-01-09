@@ -26,14 +26,19 @@ export default function TablesPage() {
     // Load active orders to show status
     useEffect(() => {
         const fetchActiveOrders = async () => {
-            const { data } = await supabase
-                .from('orders')
-                .select('table_number')
-                .neq('status', 'done');
+            try {
+                const response = await fetch('/api/orders');
+                if (response.ok) {
+                    const orders: any[] = await response.json();
+                    // Active tables have orders that are NOT paid or cancelled
+                    const active = orders
+                        .filter(o => ['new', 'preparing', 'done'].includes(o.status))
+                        .map(o => parseInt(o.tableNumber));
 
-            if (data) {
-                const uniqueTables = [...new Set(data.map(o => parseInt(o.table_number)))];
-                setActiveTables(uniqueTables);
+                    setActiveTables([...new Set(active)]);
+                }
+            } catch (e) {
+                console.error("Failed to fetch table status", e);
             }
         };
 
