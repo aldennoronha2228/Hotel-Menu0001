@@ -13,13 +13,17 @@ interface FloorPlanProps {
     activeTables?: number[];
     onTableClick?: (tableId: number) => void;
     readOnly?: boolean;
+    scale?: number;
+    height?: number | string;
 }
 
 export default function FloorPlan({
     tables = Array.from({ length: 15 }, (_, i) => i + 1),
     activeTables = [],
     onTableClick,
-    readOnly = false
+    readOnly = false,
+    scale = 1,
+    height = '600px'
 }: FloorPlanProps) {
     const [positions, setPositions] = useState<TablePosition[]>([]);
     const [isDragging, setIsDragging] = useState<number | null>(null);
@@ -77,14 +81,14 @@ export default function FloorPlan({
         setIsDragging(null);
     };
 
-    if (!mounted) return <div style={{ height: '600px', backgroundColor: '#f8fafc', borderRadius: '12px' }}>Loading Map...</div>;
+    if (!mounted) return <div style={{ height: typeof height === 'number' ? `${height}px` : height, backgroundColor: '#f8fafc', borderRadius: '12px' }}>Loading Map...</div>;
 
     return (
         <div
             className="floor-plan-container"
             style={{
                 position: 'relative',
-                height: '600px',
+                height: typeof height === 'number' ? `${height}px` : height,
                 backgroundColor: '#f8fafc',
                 border: '2px dashed #cbd5e1',
                 borderRadius: '12px',
@@ -96,38 +100,40 @@ export default function FloorPlan({
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
         >
-            {positions.map(pos => {
-                const isActive = activeTables.includes(pos.id);
-                return (
-                    <div
-                        key={pos.id}
-                        onMouseDown={(e) => handleDragStart(e, pos.id)}
-                        onClick={() => onTableClick && onTableClick(pos.id)}
-                        style={{
-                            position: 'absolute',
-                            left: pos.x,
-                            top: pos.y,
-                            width: '80px',
-                            height: '80px',
-                            borderRadius: '50%',
-                            backgroundColor: isActive ? '#fef08a' : 'white', // Yellow if active
-                            border: `3px solid ${isActive ? '#eab308' : '#e2e8f0'}`,
-                            boxShadow: isDragging === pos.id ? '0 10px 25px rgba(0,0,0,0.2)' : '0 4px 6px rgba(0,0,0,0.1)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: readOnly ? 'pointer' : (isDragging === pos.id ? 'grabbing' : 'grab'),
-                            zIndex: isDragging === pos.id ? 10 : 1,
-                            transition: isDragging === pos.id ? 'none' : 'box-shadow 0.2s, transform 0.2s',
-                        }}
-                        title={isActive ? 'Active Order' : 'Empty Table'}
-                    >
-                        <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#334155' }}>{pos.id}</span>
-                        {isActive && <span style={{ fontSize: '0.6rem', color: '#854d0e', fontWeight: 600 }}>BUSY</span>}
-                    </div>
-                );
-            })}
+            <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: '100%', height: '100%' }}>
+                {positions.map(pos => {
+                    const isActive = activeTables.includes(pos.id);
+                    return (
+                        <div
+                            key={pos.id}
+                            onMouseDown={(e) => handleDragStart(e, pos.id)}
+                            onClick={() => onTableClick && onTableClick(pos.id)}
+                            style={{
+                                position: 'absolute',
+                                left: pos.x,
+                                top: pos.y,
+                                width: '80px',
+                                height: '80px',
+                                borderRadius: '50%',
+                                backgroundColor: isActive ? '#fef08a' : 'white', // Yellow if active
+                                border: `3px solid ${isActive ? '#eab308' : '#e2e8f0'}`,
+                                boxShadow: isDragging === pos.id ? '0 10px 25px rgba(0,0,0,0.2)' : '0 4px 6px rgba(0,0,0,0.1)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: readOnly ? 'pointer' : (isDragging === pos.id ? 'grabbing' : 'grab'),
+                                zIndex: isDragging === pos.id ? 10 : 1,
+                                transition: isDragging === pos.id ? 'none' : 'box-shadow 0.2s, transform 0.2s',
+                            }}
+                            title={isActive ? 'Active Order' : 'Empty Table'}
+                        >
+                            <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#334155' }}>{pos.id}</span>
+                            {isActive && <span style={{ fontSize: '0.6rem', color: '#854d0e', fontWeight: 600 }}>BUSY</span>}
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }
