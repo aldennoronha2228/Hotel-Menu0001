@@ -20,13 +20,17 @@ export default function MenuPage({
     const [showCart, setShowCart] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
 
+    // Bill / Active Orders State
+    const [activeOrders, setActiveOrders] = useState<any[]>([]);
+    const [showBill, setShowBill] = useState(false);
+
     // Unwrap promises
     const unwrappedParams = use(params);
     const unwrappedSearchParams = use(searchParams);
 
     const tableNumber = unwrappedSearchParams.table || '0';
 
-    // Fetch Data
+    // Fetch Menu Data
     useEffect(() => {
         const fetchMenuData = async () => {
             try {
@@ -52,6 +56,25 @@ export default function MenuPage({
         fetchMenuData();
     }, []);
 
+    // Fetch Active Orders for this Table
+    useEffect(() => {
+        if (!tableNumber || tableNumber === '0') return;
+
+        const fetchActiveOrders = async () => {
+            try {
+                const res = await fetch(`/api/orders?table=${tableNumber}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setActiveOrders(data);
+                }
+            } catch (e) { console.error('Error fetching active orders', e); }
+        };
+
+        fetchActiveOrders();
+        const interval = setInterval(fetchActiveOrders, 10000);
+        return () => clearInterval(interval);
+    }, [tableNumber]);
+
     // Set mounted state and load cart from localStorage
     useEffect(() => {
         setMounted(true);
@@ -74,7 +97,7 @@ export default function MenuPage({
 
     // Prevent body scroll when modal is open
     useEffect(() => {
-        if (showCart || showConfirmation) {
+        if (showCart || showConfirmation || showBill) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
@@ -82,7 +105,7 @@ export default function MenuPage({
         return () => {
             document.body.style.overflow = '';
         };
-    }, [showCart, showConfirmation]);
+    }, [showCart, showConfirmation, showBill]);
 
     const addToCart = (item: any) => {
         setCart([...cart, {
@@ -146,7 +169,11 @@ export default function MenuPage({
             setShowCart(false);
             setShowConfirmation(true);
 
-            // If in demo mode, show a console message
+            // Fetch active orders immediately update UI
+            // (The poll will catch it too, but this is faster)
+            const activeRes = await fetch(`/api/orders?table=${tableNumber}`);
+            if (activeRes.ok) setActiveOrders(await activeRes.json());
+
             if (data.demo) {
                 console.log('Demo Mode:', data.message);
             }
@@ -159,6 +186,7 @@ export default function MenuPage({
     const getTotalItems = () => cart.reduce((sum, item) => sum + item.quantity, 0);
     const getTotalPrice = () => cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const getCartItem = (itemId: string) => cart.find(item => item.id === itemId);
+    const getBillTotal = () => activeOrders.reduce((sum, order) => sum + order.total, 0);
 
     const filteredItems = menuItems.filter(item => item.category_id === currentCategory);
 
@@ -168,8 +196,21 @@ export default function MenuPage({
         <>
             {/* Header */}
             <header className="header-customer">
-                <h1>{mockRestaurant.name} (Online Menu)</h1>
-                <p className="table-number">Table {tableNumber}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h1>{mockRestaurant.name} (Online Menu)</h1>
+                        <p className="table-number">Table {tableNumber}</p>
+                    </div>
+                    {activeOrders.length > 0 && (
+                        <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setShowBill(true)}
+                            style={{ backgroundColor: '#fff', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
+                        >
+                            View Bill (₹{getBillTotal()})
+                        </button>
+                    )}
+                </div>
             </header>
 
             {/* Category Navigation */}
@@ -192,7 +233,7 @@ export default function MenuPage({
                 ) : (
                     filteredItems.map(item => {
                         const cartItem = getCartItem(item.id);
-                        const isAvailable = item.available !== false; // Default true if null
+                        const isAvailable = item.available !== false;
 
                         return (
                             <div key={item.id} className={`menu-item ${!isAvailable ? 'unavailable' : ''}`}>
@@ -325,6 +366,52 @@ export default function MenuPage({
                 </>
             )}
 
+            {/* Bill Modal */}
+            {showBill && (
+                <>
+                    <div className="modal-overlay active" onClick={() => setShowBill(false)}></div>
+                    <div className="modal active">
+                        <div className="modal-header">
+                            <h2>Your Bill</h2>
+                            <button className="btn-icon btn-secondary" onClick={() => setShowBill(false)}>✕</button>
+                        </div>
+                        <div className="modal-content">
+                            {activeOrders.map(order => (
+                                <div key={order.id} className="order-summary-card" style={{
+                                    border: '1px solid #eee', padding: '1rem', marginBottom: '1rem', borderRadius: '8px'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                        <span className={`status-badge ${order.status}`}>{order.status.toUpperCase()}</span>
+                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>Order #{order.id.slice(0, 4)}</span>
+                                    </div>
+                                    {order.items.map((img: any, idx: number) => (
+                                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', marginBottom: '0.2rem' }}>
+                                            <span>{img.name} x{img.quantity}</span>
+                                            <span>₹{img.price * img.quantity}</span>
+                                        </div>
+                                    ))}
+                                    <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #ddd', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                                        <span>Total</span>
+                                        <span>₹{order.total}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="modal-footer">
+                            <div className="modal-footer-content">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem' }}>
+                                    <span>Grand Total</span>
+                                    <span>₹{getBillTotal()}</span>
+                                </div>
+                                <button className="btn btn-secondary" onClick={() => setShowBill(false)} style={{ width: '100%' }}>
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
             {/* Order Confirmation */}
             {showConfirmation && (
                 <div className="modal active">
@@ -335,9 +422,12 @@ export default function MenuPage({
                             <p>Please pay at the counter after dining</p>
                             <button
                                 className="btn btn-primary"
-                                onClick={() => setShowConfirmation(false)}
+                                onClick={() => {
+                                    setShowConfirmation(false);
+                                    setShowBill(true); // Show Status/Bill immediately after ordering
+                                }}
                             >
-                                Back to Menu
+                                View Order Status
                             </button>
                         </div>
                     </div>

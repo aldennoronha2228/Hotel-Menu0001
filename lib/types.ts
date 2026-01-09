@@ -30,7 +30,7 @@ export interface Order {
     tableNumber: string;
     items: CartItem[];
     total: number;
-    status: 'new' | 'preparing' | 'done';
+    status: 'new' | 'preparing' | 'done' | 'paid';
     timestamp: string;
 }
 

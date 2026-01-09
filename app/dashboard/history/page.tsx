@@ -43,7 +43,7 @@ export default function OrderHistoryPage() {
 
         const filtered = orders.filter(order => {
             const orderDate = new Date(order.timestamp).toISOString().split('T')[0];
-            return orderDate === selectedDate && order.status === 'done';
+            return orderDate === selectedDate && order.status === 'paid';
         });
 
         setFilteredOrders(filtered);
@@ -149,9 +149,9 @@ export default function OrderHistoryPage() {
                         textAlign: 'center'
                     }}>
                         <h3 style={{ fontSize: 'var(--font-size-2xl)', marginBottom: '0.5rem' }}>
-                            {getOrdersByStatus('done')}
+                            {getOrdersByStatus('paid')}
                         </h3>
-                        <p className="text-secondary">Completed</p>
+                        <p className="text-secondary">Paid Orders</p>
                     </div>
                 </div>
             )}

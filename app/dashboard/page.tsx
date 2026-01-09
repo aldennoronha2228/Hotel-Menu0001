@@ -69,22 +69,24 @@ export default function DashboardPage() {
     };
 
     // Filter and Sort orders
-    // Show only ACTIVE orders (new, preparing) in the Live Dashboard
-    const activeOrders = orders.filter(o => o.status !== 'done');
+    // Show only ACTIVE orders (new, preparing, done) in the Live Dashboard
+    // Paid orders go to History
+    const activeOrders = orders.filter(o => o.status !== 'paid');
 
     const visibleOrders = selectedTable
         ? activeOrders.filter(o => parseInt(o.tableNumber) === selectedTable)
         : activeOrders;
 
     const sortedOrders = [...visibleOrders].sort((a, b) => {
-        const statusPriority = { preparing: 0, new: 1, done: 2 }; // done is technically filtered out but good to keep safe
+        const statusPriority = { preparing: 0, new: 1, done: 2, paid: 3 };
         if (statusPriority[a.status] !== statusPriority[b.status]) {
             return statusPriority[a.status] - statusPriority[b.status];
         }
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
 
-    // Get active tables for the map (from activeOrders)
+    // Get active tables for the map (only non-paid orders occupy tables? Or maybe Done tables are still occupied?)
+    // Usually Done = Eating. Paid = Left? Or Paid = Leaving.
     const activeTableNumbers = [...new Set(
         activeOrders.map(o => parseInt(o.tableNumber))
     )];
@@ -97,7 +99,7 @@ export default function DashboardPage() {
                 <div>
                     <h1>Live Orders</h1>
                     <p className="text-secondary">
-                        {orders.filter(o => o.status !== 'done').length} active orders
+                        {orders.filter(o => o.status !== 'paid').length} active orders
                         {selectedTable && (
                             <span
                                 onClick={() => setSelectedTable(null)}
@@ -174,7 +176,7 @@ export default function DashboardPage() {
                         backgroundColor: isPreparing ? '#fffbf0' : 'var(--color-bg)',
                         transform: isPreparing ? 'translateY(-4px)' : 'none',
                         boxShadow: isPreparing ? '0 8px 24px rgba(255,153,0,0.15)' : '0 2px 4px rgba(0,0,0,0.05)',
-                        opacity: isDone ? 0.6 : 1,
+                        opacity: isDone ? 0.8 : 1, // Increased opacity for readability
                         fontSize: '0.95rem'
                     };
 
@@ -209,7 +211,7 @@ export default function DashboardPage() {
                             <div className={`status-badge ${order.status}`} style={{ marginBottom: '1rem' }}>
                                 {order.status === 'new' && 'New Order'}
                                 {order.status === 'preparing' && '🔥 PREPARING'}
-                                {order.status === 'done' && 'Done'}
+                                {order.status === 'done' && 'Done (Served)'}
                             </div>
 
                             <div className="order-items" style={{ marginBottom: '1rem', flex: 1 }}>
@@ -238,9 +240,14 @@ export default function DashboardPage() {
                                     </button>
                                 )}
                                 {order.status === 'done' && (
-                                    <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} disabled>
-                                        Completed
-                                    </button>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                                        <div className="btn btn-secondary btn-sm" style={{ textAlign: 'center', opacity: 0.8, cursor: 'default', backgroundColor: '#f3f4f6', color: '#374151' }}>
+                                            Waiting Payment
+                                        </div>
+                                        <button className="btn btn-primary" style={{ flex: 1, backgroundColor: '#8b5cf6', color: 'white', border: 'none' }} onClick={() => updateOrderStatus(order.id, 'paid')}>
+                                            💰 Mark as Paid
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -250,9 +257,9 @@ export default function DashboardPage() {
 
             {sortedOrders.length === 0 && (
                 <div className="text-center text-secondary" style={{ marginTop: '3rem' }}>
-                    <p>No orders yet</p>
+                    <p>No active orders</p>
                     <p style={{ fontSize: 'var(--font-size-sm)', marginTop: '0.5rem' }}>
-                        Orders will appear here when customers place them
+                        New orders will appear here
                     </p>
                 </div>
             )}

@@ -1,23 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-// GET all orders
-export async function GET() {
+// GET orders (Owner gets all, Public gets Table-specific)
+import { currentUser } from '@clerk/nextjs/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
     try {
-        // Check if Supabase is configured
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-            console.warn('Supabase not configured, returning empty orders');
-            return NextResponse.json([]);
+        const { searchParams } = new URL(request.url);
+        const tableFilter = searchParams.get('table');
+
+        // Check Auth
+        let isAdmin = false;
+        if (!tableFilter) {
+            const user = await currentUser();
+            const ownerEmail = process.env.OWNER_EMAIL;
+            const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+            if (ownerEmail && userEmail === ownerEmail) {
+                isAdmin = true;
+            } else {
+                return NextResponse.json({ error: 'Unauthorized: Table number required for public access' }, { status: 401 });
+            }
         }
 
-        const { data: orders, error: ordersError } = await supabase
+        const client = (isAdmin && supabaseAdmin) ? supabaseAdmin : supabase;
+
+        let query = client
             .from('orders')
             .select('*, order_items(*)')
             .order('created_at', { ascending: false });
 
+        if (!isAdmin && tableFilter) {
+            query = query.eq('table_number', tableFilter);
+
+            // Optional: Limit to recent orders (e.g. last 12 hours) to avoid showing old history to new customers
+            const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+            query = query.gt('created_at', twelveHoursAgo);
+        }
+
+        const { data: orders, error: ordersError } = await query;
+
         if (ordersError) throw ordersError;
 
-        // Transform the data to match the expected format
+        // Transform data
         const formattedOrders = orders.map(order => ({
             id: order.id,
             restaurantId: order.restaurant_id,
@@ -36,7 +63,7 @@ export async function GET() {
         return NextResponse.json(formattedOrders);
     } catch (error) {
         console.error('Error fetching orders:', error);
-        return NextResponse.json([], { status: 200 }); // Return empty array instead of error
+        return NextResponse.json([], { status: 500 });
     }
 }
 
