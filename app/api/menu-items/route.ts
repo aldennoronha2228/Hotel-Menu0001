@@ -28,12 +28,25 @@ export async function GET() {
 }
 
 // POST create new menu item
+import { currentUser } from '@clerk/nextjs/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+
 export async function POST(request: NextRequest) {
     try {
+        // Authenticate Owner
+        const user = await currentUser();
+        const ownerEmail = process.env.OWNER_EMAIL;
+        const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+
+        if (!ownerEmail || userEmail !== ownerEmail) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const body = await request.json();
         const { name, price, category_id, type, image_url } = body;
 
-        const { data, error } = await supabase
+        // Use Admin Client to bypass RLS for Write
+        const { data, error } = await supabaseAdmin
             .from('menu_items')
             .insert([
                 {

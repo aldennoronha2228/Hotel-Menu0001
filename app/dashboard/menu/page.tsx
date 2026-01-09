@@ -1,72 +1,161 @@
 'use client';
 
-import { useState } from 'react';
-import { MenuItem } from '@/lib/types';
-import { mockMenuItems, mockCategories } from '@/lib/mockData';
+import { useState, useEffect } from 'react';
+import { MenuItem, Category } from '@/lib/types';
 
 export default function MenuManagementPage() {
-    const [menuItems, setMenuItems] = useState<MenuItem[]>(mockMenuItems);
-    const [selectedCategory, setSelectedCategory] = useState('starters');
+    const [menuItems, setMenuItems] = useState<any[]>([]); // Using any for joined data flexibility
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+    const [editingItem, setEditingItem] = useState<any>(null); // Extended MenuItem
+    const [loading, setLoading] = useState(true);
+
+    // Form States
     const [newItem, setNewItem] = useState({
         name: '',
         price: '',
-        category: 'starters',
+        category_id: '',
         type: 'veg' as 'veg' | 'non-veg',
     });
 
-    const categoryItems = menuItems.filter(item => item.category === selectedCategory);
+    // Fetch Data
+    useEffect(() => {
+        fetchData();
+    }, []);
 
-    const toggleAvailability = (itemId: string) => {
-        setMenuItems(menuItems.map(item =>
-            item.id === itemId
-                ? { ...item, available: !item.available }
-                : item
-        ));
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Fetch Categories
+            const catRes = await fetch('/api/categories');
+            if (catRes.ok) {
+                const cats = await catRes.json();
+                setCategories(cats);
+                if (cats.length > 0 && !selectedCategory) {
+                    setSelectedCategory(cats[0].id);
+                    setNewItem(prev => ({ ...prev, category_id: cats[0].id }));
+                }
+            }
+
+            // Fetch Items
+            const itemRes = await fetch('/api/menu-items');
+            if (itemRes.ok) {
+                const items = await itemRes.json();
+                setMenuItems(items);
+            }
+        } catch (error) {
+            console.error('Error loading menu data:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleAddItem = (e: React.FormEvent) => {
+    const categoryItems = menuItems.filter(item => item.category_id === selectedCategory);
+
+    const toggleAvailability = async (item: any) => {
+        const newStatus = !item.available;
+        // Optimistic update
+        setMenuItems(prev => prev.map(i => i.id === item.id ? { ...i, available: newStatus } : i));
+
+        try {
+            await fetch(`/api/menu-items/${item.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ available: newStatus })
+            });
+        } catch (error) {
+            console.error('Failed to update status', error);
+            // Revert on error
+            setMenuItems(prev => prev.map(i => i.id === item.id ? { ...i, available: !newStatus } : i));
+        }
+    };
+
+    const handleAddItem = async (e: React.FormEvent) => {
         e.preventDefault();
+        try {
+            const response = await fetch('/api/menu-items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: newItem.name,
+                    price: parseFloat(newItem.price),
+                    category_id: newItem.category_id,
+                    type: newItem.type
+                })
+            });
 
-        const item: MenuItem = {
-            id: `item${Date.now()}`,
-            name: newItem.name,
-            price: parseFloat(newItem.price),
-            category: newItem.category,
-            type: newItem.type,
-            available: true,
-        };
-
-        setMenuItems([...menuItems, item]);
-        setShowAddModal(false);
-        setNewItem({ name: '', price: '', category: 'starters', type: 'veg' });
+            if (response.ok) {
+                const navItem = await response.json();
+                setMenuItems([...menuItems, navItem]);
+                setShowAddModal(false);
+                setNewItem({
+                    name: '',
+                    price: '',
+                    category_id: categories[0]?.id || '',
+                    type: 'veg'
+                });
+                fetchData(); // Refresh to ensure Sort/Join is correct
+            } else {
+                alert('Failed to add item');
+            }
+        } catch (error) {
+            console.error('Error adding item:', error);
+            alert('Error adding item');
+        }
     };
 
-    const openEditModal = (item: MenuItem) => {
-        setEditingItem(item);
-        setShowEditModal(true);
-    };
-
-    const handleEditItem = (e: React.FormEvent) => {
+    const handleEditItem = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingItem) return;
 
-        setMenuItems(menuItems.map(item =>
-            item.id === editingItem.id ? editingItem : item
-        ));
-        setShowEditModal(false);
-        setEditingItem(null);
-    };
+        try {
+            const response = await fetch(`/api/menu-items/${editingItem.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: editingItem.name,
+                    price: parseFloat(editingItem.price),
+                    category_id: editingItem.category_id,
+                    type: editingItem.type,
+                    available: editingItem.available
+                })
+            });
 
-    const handleDeleteItem = (itemId: string) => {
-        if (confirm('Are you sure you want to delete this item?')) {
-            setMenuItems(menuItems.filter(item => item.id !== itemId));
-            setShowEditModal(false);
-            setEditingItem(null);
+            if (response.ok) {
+                const updated = await response.json();
+                setMenuItems(menuItems.map(i => i.id === updated.id ? updated : i));
+                setShowEditModal(false);
+                setEditingItem(null);
+            } else {
+                alert('Failed to update item');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error updating item');
         }
     };
+
+    const handleDeleteItem = async (itemId: string) => {
+        if (!confirm('Are you sure you want to delete this item?')) return;
+
+        try {
+            const response = await fetch(`/api/menu-items/${itemId}`, { method: 'DELETE' });
+            if (response.ok) {
+                setMenuItems(menuItems.filter(i => i.id !== itemId));
+                setShowEditModal(false);
+                setEditingItem(null);
+            } else {
+                alert('Failed to delete item');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error deleting item');
+        }
+    };
+
+    if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading menu...</div>;
 
     return (
         <>
@@ -87,7 +176,7 @@ export default function MenuManagementPage() {
                 <div className="category-list">
                     <h3>Categories</h3>
                     <ul>
-                        {mockCategories.map(category => (
+                        {categories.map(category => (
                             <li
                                 key={category.id}
                                 className={selectedCategory === category.id ? 'active' : ''}
@@ -115,16 +204,15 @@ export default function MenuManagementPage() {
                                 <div className="item-availability">
                                     <div
                                         className={`toggle-switch ${item.available ? 'active' : ''}`}
-                                        onClick={() => toggleAvailability(item.id)}
+                                        onClick={() => toggleAvailability(item)}
                                     ></div>
                                     <span>{item.available ? 'Available' : 'Unavailable'}</span>
                                 </div>
 
-                                <button
-                                    className="btn btn-secondary btn-sm"
-                                    style={{ width: '100%' }}
-                                    onClick={() => openEditModal(item)}
-                                >
+                                <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={() => {
+                                    setEditingItem(item);
+                                    setShowEditModal(true);
+                                }}>
                                     Edit
                                 </button>
                             </div>
@@ -146,51 +234,38 @@ export default function MenuManagementPage() {
                     <div className="modal active">
                         <div className="modal-header">
                             <h2>Add Menu Item</h2>
-                            <button className="btn-icon btn-secondary" onClick={() => setShowAddModal(false)}>
-                                ✕
-                            </button>
+                            <button className="btn-icon btn-secondary" onClick={() => setShowAddModal(false)}>✕</button>
                         </div>
                         <div className="modal-content">
                             <form onSubmit={handleAddItem}>
                                 <div className="form-group">
                                     <label className="form-label">Item Name</label>
                                     <input
-                                        type="text"
-                                        className="form-input"
+                                        type="text" className="form-input" required
                                         value={newItem.name}
                                         onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                                        required
                                     />
                                 </div>
-
                                 <div className="form-group">
                                     <label className="form-label">Price (₹)</label>
                                     <input
-                                        type="number"
-                                        className="form-input"
+                                        type="number" className="form-input" required min="0" step="1"
                                         value={newItem.price}
                                         onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
-                                        required
-                                        min="0"
-                                        step="1"
                                     />
                                 </div>
-
                                 <div className="form-group">
                                     <label className="form-label">Category</label>
                                     <select
                                         className="form-select"
-                                        value={newItem.category}
-                                        onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                                        value={newItem.category_id}
+                                        onChange={(e) => setNewItem({ ...newItem, category_id: e.target.value })}
                                     >
-                                        {mockCategories.map(category => (
-                                            <option key={category.id} value={category.id}>
-                                                {category.name}
-                                            </option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
                                         ))}
                                     </select>
                                 </div>
-
                                 <div className="form-group">
                                     <label className="form-label">Type</label>
                                     <select
@@ -202,10 +277,7 @@ export default function MenuManagementPage() {
                                         <option value="non-veg">Non-Vegetarian</option>
                                     </select>
                                 </div>
-
-                                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-                                    Add Item
-                                </button>
+                                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Add Item</button>
                             </form>
                         </div>
                     </div>
@@ -219,51 +291,38 @@ export default function MenuManagementPage() {
                     <div className="modal active">
                         <div className="modal-header">
                             <h2>Edit Menu Item</h2>
-                            <button className="btn-icon btn-secondary" onClick={() => setShowEditModal(false)}>
-                                ✕
-                            </button>
+                            <button className="btn-icon btn-secondary" onClick={() => setShowEditModal(false)}>✕</button>
                         </div>
                         <div className="modal-content">
                             <form onSubmit={handleEditItem}>
                                 <div className="form-group">
                                     <label className="form-label">Item Name</label>
                                     <input
-                                        type="text"
-                                        className="form-input"
+                                        type="text" className="form-input" required
                                         value={editingItem.name}
                                         onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
-                                        required
                                     />
                                 </div>
-
                                 <div className="form-group">
                                     <label className="form-label">Price (₹)</label>
                                     <input
-                                        type="number"
-                                        className="form-input"
+                                        type="number" className="form-input" required min="0" step="1"
                                         value={editingItem.price}
-                                        onChange={(e) => setEditingItem({ ...editingItem, price: parseFloat(e.target.value) })}
-                                        required
-                                        min="0"
-                                        step="1"
+                                        onChange={(e) => setEditingItem({ ...editingItem, price: e.target.value })}
                                     />
                                 </div>
-
                                 <div className="form-group">
                                     <label className="form-label">Category</label>
                                     <select
                                         className="form-select"
-                                        value={editingItem.category}
-                                        onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                                        value={editingItem.category_id}
+                                        onChange={(e) => setEditingItem({ ...editingItem, category_id: e.target.value })}
                                     >
-                                        {mockCategories.map(category => (
-                                            <option key={category.id} value={category.id}>
-                                                {category.name}
-                                            </option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
                                         ))}
                                     </select>
                                 </div>
-
                                 <div className="form-group">
                                     <label className="form-label">Type</label>
                                     <select
@@ -275,7 +334,6 @@ export default function MenuManagementPage() {
                                         <option value="non-veg">Non-Vegetarian</option>
                                     </select>
                                 </div>
-
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                     <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
                                         Save Changes
