@@ -9,6 +9,7 @@ export default function DashboardSidebar() {
 
     const navItems = [
         { href: '/dashboard', label: 'Live Orders' },
+        { href: '/dashboard/history', label: 'Order History' },
         { href: '/dashboard/menu', label: 'Menu Management' },
         { href: '/dashboard/tables', label: 'Tables' },
     ];
