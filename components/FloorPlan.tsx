@@ -17,8 +17,10 @@ interface FloorPlanProps {
     height?: number | string;
 }
 
+const DEFAULT_TABLES = Array.from({ length: 15 }, (_, i) => i + 1);
+
 export default function FloorPlan({
-    tables = Array.from({ length: 15 }, (_, i) => i + 1),
+    tables = DEFAULT_TABLES,
     activeTables = [],
     onTableClick,
     readOnly = false,

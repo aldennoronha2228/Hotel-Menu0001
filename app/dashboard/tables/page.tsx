@@ -147,6 +147,7 @@ export default function TablesPage() {
             {viewMode === 'map' ? (
                 <div style={{ marginBottom: '2rem' }}>
                     <FloorPlan
+                        tables={tables}
                         activeTables={activeTables}
                         readOnly={false}
                     />
