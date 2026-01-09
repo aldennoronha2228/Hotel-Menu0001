@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { CartItem } from '@/lib/types';
 import { mockRestaurant, mockCategories, getMenuItemsByCategory, getMenuItemById } from '@/lib/mockData';
 
@@ -8,8 +8,8 @@ export default function MenuPage({
     params,
     searchParams
 }: {
-    params: { restaurantId: string }
-    searchParams: { table?: string }
+    params: Promise<{ restaurantId: string }>
+    searchParams: Promise<{ table?: string }>
 }) {
     const [mounted, setMounted] = useState(false);
     const [currentCategory, setCurrentCategory] = useState('starters');
@@ -17,7 +17,11 @@ export default function MenuPage({
     const [showCart, setShowCart] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
 
-    const tableNumber = searchParams.table || '0';
+    // Unwrap promises
+    const unwrappedParams = use(params);
+    const unwrappedSearchParams = use(searchParams);
+
+    const tableNumber = unwrappedSearchParams.table || '0';
     const menuItems = getMenuItemsByCategory(currentCategory);
 
     // Set mounted state and load cart from localStorage
@@ -99,7 +103,7 @@ export default function MenuPage({
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    restaurantId: params.restaurantId,
+                    restaurantId: unwrappedParams.restaurantId,
                     tableNumber,
                     items: cart,
                     total: getTotalPrice()
