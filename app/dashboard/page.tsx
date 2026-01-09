@@ -26,6 +26,14 @@ export default function DashboardPage() {
             if (response.ok) {
                 const data = await response.json();
                 setOrders(data);
+            } else {
+                const errorData = await response.json();
+                console.error('Fetch error:', errorData);
+                // Only alert on specific errors if needed, or set error state
+                if (response.status === 401) {
+                    // Optionally show a visual error instead of alert loop
+                    console.warn("Unauthorized access to orders");
+                }
             }
         } catch (error) {
             console.error('Error fetching orders:', error);

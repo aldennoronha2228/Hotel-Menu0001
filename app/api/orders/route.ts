@@ -18,10 +18,12 @@ export async function GET(request: NextRequest) {
             const user = await currentUser();
             const ownerEmail = process.env.OWNER_EMAIL;
             const userEmail = user?.emailAddresses?.[0]?.emailAddress;
-            if (ownerEmail && userEmail === ownerEmail) {
+
+            if (ownerEmail && userEmail && userEmail.toLowerCase() === ownerEmail.toLowerCase()) {
                 isAdmin = true;
             } else {
-                return NextResponse.json({ error: 'Unauthorized: Table number required for public access' }, { status: 401 });
+                console.error(`Auth Failed: User=${userEmail}, Owner=${ownerEmail}`);
+                return NextResponse.json({ error: 'Unauthorized: Access Denied. Check OWNER_EMAIL config.' }, { status: 401 });
             }
         }
 
