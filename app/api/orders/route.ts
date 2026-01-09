@@ -21,6 +21,9 @@ export async function GET(request: NextRequest) {
 
             if (ownerEmail && userEmail && userEmail.toLowerCase() === ownerEmail.toLowerCase()) {
                 isAdmin = true;
+                if (!supabaseAdmin) {
+                    return NextResponse.json({ error: 'Server Config Error: SUPABASE_SERVICE_ROLE_KEY is missing' }, { status: 500 });
+                }
             } else {
                 console.error(`Auth Failed: User=${userEmail}, Owner=${ownerEmail}`);
                 return NextResponse.json({ error: 'Unauthorized: Access Denied. Check OWNER_EMAIL config.' }, { status: 401 });
