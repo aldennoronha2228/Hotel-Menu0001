@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import QRCode from 'qrcode';
 import { supabase } from '@/lib/supabase';
+import FloorPlan from '@/components/FloorPlan';
 
 interface TablePosition {
     id: number;
@@ -124,8 +125,8 @@ export default function TablesPage() {
         <>
             <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <h1>Restaurant Floor Plan</h1>
-                    <p className="text-secondary">Drag tables to rearrange • Green = Active Order</p>
+                    <h1>Tables & QR Codes</h1>
+                    <p className="text-secondary">{tables.length} tables configured</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button
@@ -144,51 +145,11 @@ export default function TablesPage() {
             </header>
 
             {viewMode === 'map' ? (
-                <div
-                    className="floor-plan-container"
-                    style={{
-                        position: 'relative',
-                        height: '600px',
-                        backgroundColor: '#f8fafc',
-                        border: '2px dashed #cbd5e1',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        userSelect: 'none'
-                    }}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
-                >
-                    {positions.map(pos => {
-                        const isActive = activeTables.includes(pos.id);
-                        return (
-                            <div
-                                key={pos.id}
-                                onMouseDown={(e) => handleDragStart(e, pos.id)}
-                                style={{
-                                    position: 'absolute',
-                                    left: pos.x,
-                                    top: pos.y,
-                                    width: '80px',
-                                    height: '80px',
-                                    borderRadius: '50%',
-                                    backgroundColor: isActive ? '#fef08a' : 'white',
-                                    border: `3px solid ${isActive ? '#eab308' : '#e2e8f0'}`,
-                                    boxShadow: isDragging === pos.id ? '0 10px 25px rgba(0,0,0,0.2)' : '0 4px 6px rgba(0,0,0,0.1)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: isDragging === pos.id ? 'grabbing' : 'grab',
-                                    zIndex: isDragging === pos.id ? 10 : 1,
-                                    transition: isDragging === pos.id ? 'none' : 'box-shadow 0.2s, transform 0.2s',
-                                }}
-                            >
-                                <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#334155' }}>{pos.id}</span>
-                                {isActive && <span style={{ fontSize: '0.6rem', color: '#854d0e', fontWeight: 600 }}>BUSY</span>}
-                            </div>
-                        );
-                    })}
+                <div style={{ marginBottom: '2rem' }}>
+                    <FloorPlan
+                        activeTables={activeTables}
+                        readOnly={false}
+                    />
                 </div>
             ) : (
                 <div className="tables-grid">
@@ -203,6 +164,14 @@ export default function TablesPage() {
                             <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => handleDownloadQR(tableNumber)} disabled={!qrCodes[tableNumber]}>
                                 Download QR
                             </button>
+                            <a
+                                href={`/menu/rest001?table=${tableNumber}`}
+                                target="_blank"
+                                className="btn btn-secondary btn-sm"
+                                style={{ width: '100%', marginTop: '0.5rem', display: 'inline-flex' }}
+                            >
+                                Preview Menu
+                            </a>
                         </div>
                     ))}
                 </div>

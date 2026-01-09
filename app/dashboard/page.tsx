@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { Order } from '@/lib/types';
+import FloorPlan from '@/components/FloorPlan';
 
 export default function DashboardPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+    const [selectedTable, setSelectedTable] = useState<number | null>(null);
 
     // Fetch orders from API
     useEffect(() => {
@@ -34,43 +37,24 @@ export default function DashboardPage() {
         try {
             const response = await fetch(`/api/orders/${orderId}`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus }),
             });
 
             if (response.ok) {
-                // Update local state immediately
-                setOrders(orders.map(order =>
-                    order.id === orderId
-                        ? { ...order, status: newStatus }
-                        : order
-                ));
+                setOrders(orders.map(order => order.id === orderId ? { ...order, status: newStatus } : order));
             }
-        } catch (error) {
-            console.error('Error updating order:', error);
-            alert('Failed to update order status');
-        }
+        } catch (error) { console.error(error); alert('Failed to update'); }
     };
 
     const deleteOrder = async (orderId: string) => {
         if (!confirm('Are you sure you want to delete this order?')) return;
-
         try {
-            const response = await fetch(`/api/orders/${orderId}`, {
-                method: 'DELETE',
-            });
-
+            const response = await fetch(`/api/orders/${orderId}`, { method: 'DELETE' });
             if (response.ok) {
                 setOrders(orders.filter(order => order.id !== orderId));
-            } else {
-                throw new Error('Failed to delete');
-            }
-        } catch (error) {
-            console.error('Error deleting order:', error);
-            alert('Failed to delete order');
-        }
+            } else { throw new Error('Failed to delete'); }
+        } catch (error) { console.error(error); alert('Failed to delete'); }
     };
 
     const formatTime = (timestamp: string) => {
@@ -78,15 +62,18 @@ export default function DashboardPage() {
         const now = new Date();
         const diffMs = now.getTime() - date.getTime();
         const diffMins = Math.floor(diffMs / 60000);
-
         if (diffMins < 1) return 'Just now';
         if (diffMins < 60) return `${diffMins}m ago`;
         const diffHours = Math.floor(diffMins / 60);
         return `${diffHours}h ${diffMins % 60}m ago`;
     };
 
-    // Sort orders: PREPARING first (priority), then NEW, then DONE
-    const sortedOrders = [...orders].sort((a, b) => {
+    // Filter and Sort orders
+    const visibleOrders = selectedTable
+        ? orders.filter(o => parseInt(o.tableNumber) === selectedTable)
+        : orders;
+
+    const sortedOrders = [...visibleOrders].sort((a, b) => {
         const statusPriority = { preparing: 0, new: 1, done: 2 };
         if (statusPriority[a.status] !== statusPriority[b.status]) {
             return statusPriority[a.status] - statusPriority[b.status];
@@ -94,150 +81,144 @@ export default function DashboardPage() {
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
 
-    if (loading) {
-        return (
-            <div style={{ textAlign: 'center', padding: '3rem' }}>
-                <p>Loading orders...</p>
-            </div>
-        );
-    }
+    // Get active tables for the map
+    const activeTableNumbers = [...new Set(
+        orders.filter(o => o.status !== 'done').map(o => parseInt(o.tableNumber))
+    )];
+
+    if (loading) return <div style={{ textAlign: 'center', padding: '3rem' }}>Loading orders...</div>;
 
     return (
         <>
-            <header className="dashboard-header">
-                <h1>Live Orders</h1>
-                <p className="text-secondary">
-                    {orders.filter(o => o.status !== 'done').length} active orders
-                </p>
+            <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <h1>Live Orders</h1>
+                    <p className="text-secondary">
+                        {orders.filter(o => o.status !== 'done').length} active orders
+                        {selectedTable && ` • Filtering Table ${selectedTable}`}
+                    </p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                        className={`btn ${viewMode === 'list' ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => { setViewMode('list'); setSelectedTable(null); }}
+                    >
+                        📋 List
+                    </button>
+                    <button
+                        className={`btn ${viewMode === 'map' ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={() => setViewMode('map')}
+                    >
+                        🗺️ Map
+                    </button>
+                </div>
             </header>
 
-            <div className="orders-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                gap: '1rem',
-                alignItems: 'start'
-            }}>
-                {sortedOrders.map(order => {
-                    const isPreparing = order.status === 'preparing';
-                    const isDone = order.status === 'done';
+            {viewMode === 'map' && (
+                <div style={{ marginBottom: '2rem' }}>
+                    <p className="text-secondary" style={{ marginBottom: '1rem', fontSize: '0.9rem' }}>
+                        Click a table to filter orders. Drag to arrange (changes save automatically).
+                    </p>
+                    <FloorPlan
+                        activeTables={activeTableNumbers}
+                        onTableClick={(id) => {
+                            setSelectedTable(id);
+                            setViewMode('list');
+                        }}
+                    />
+                </div>
+            )}
 
-                    // Compact styling for all cards
-                    const cardStyle: React.CSSProperties = {
-                        border: isPreparing ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                        backgroundColor: isPreparing ? '#fffbf0' : 'var(--color-bg)',
-                        transform: isPreparing ? 'translateY(-4px)' : 'none',
-                        boxShadow: isPreparing ? '0 8px 24px rgba(255,153,0,0.15)' : '0 2px 4px rgba(0,0,0,0.05)',
-                        opacity: isDone ? 0.6 : 1,
-                        fontSize: '0.95rem'
-                    };
+            {viewMode === 'list' && (
+                <div className="orders-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gap: '1rem',
+                    alignItems: 'start'
+                }}>
+                    {sortedOrders.map(order => {
+                        const isPreparing = order.status === 'preparing';
+                        const isDone = order.status === 'done';
 
-                    return (
-                        <div
-                            key={order.id}
-                            className={`order-card ${order.status}`}
-                            style={cardStyle}
-                        >
-                            <div className="order-header" style={{ marginBottom: '1rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                        <div className="table-badge" style={{
-                                            padding: '0.25rem 0.75rem',
-                                            backgroundColor: isPreparing ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
-                                            color: isPreparing ? 'white' : 'var(--color-text)'
-                                        }}>
-                                            Table {order.tableNumber}
+                        const cardStyle: React.CSSProperties = {
+                            border: isPreparing ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                            backgroundColor: isPreparing ? '#fffbf0' : 'var(--color-bg)',
+                            transform: isPreparing ? 'translateY(-4px)' : 'none',
+                            boxShadow: isPreparing ? '0 8px 24px rgba(255,153,0,0.15)' : '0 2px 4px rgba(0,0,0,0.05)',
+                            opacity: isDone ? 0.6 : 1,
+                            fontSize: '0.95rem'
+                        };
+
+                        return (
+                            <div key={order.id} className={`order-card ${order.status}`} style={cardStyle}>
+                                <div className="order-header" style={{ marginBottom: '1rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                            <div className="table-badge" style={{
+                                                padding: '0.25rem 0.75rem',
+                                                backgroundColor: isPreparing ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
+                                                color: isPreparing ? 'white' : 'var(--color-text)'
+                                            }}>
+                                                Table {order.tableNumber}
+                                            </div>
+                                            <div className="order-time">{formatTime(order.timestamp)}</div>
                                         </div>
-                                        <div className="order-time">{formatTime(order.timestamp)}</div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); deleteOrder(order.id); }}
+                                            style={{
+                                                background: 'none', border: 'none', color: '#ef4444',
+                                                cursor: 'pointer', fontSize: '1.2rem', padding: '0.2rem',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.7
+                                            }}
+                                            title="Delete Order"
+                                        >
+                                            🗑️
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteOrder(order.id);
-                                        }}
-                                        style={{
-                                            background: 'none',
-                                            border: 'none',
-                                            color: '#ef4444',
-                                            cursor: 'pointer',
-                                            fontSize: '1.2rem',
-                                            padding: '0.2rem',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            opacity: 0.7
-                                        }}
-                                        title="Delete Order"
-                                    >
-                                        🗑️
-                                    </button>
+                                </div>
+
+                                <div className={`status-badge ${order.status}`} style={{ marginBottom: '1rem' }}>
+                                    {order.status === 'new' && 'New Order'}
+                                    {order.status === 'preparing' && '🔥 PREPARING'}
+                                    {order.status === 'done' && 'Done'}
+                                </div>
+
+                                <div className="order-items" style={{ marginBottom: '1rem', flex: 1 }}>
+                                    {order.items.map((item, index) => (
+                                        <div key={index} className="order-item" style={{ padding: '0.35rem 0' }}>
+                                            <span>{item.name}</span>
+                                            <span className="item-quantity">×{item.quantity}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', fontWeight: 600 }}>
+                                    <span>Total</span>
+                                    <span>₹{order.total}</span>
+                                </div>
+
+                                <div className="order-actions">
+                                    {order.status === 'new' && (
+                                        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => updateOrderStatus(order.id, 'preparing')}>
+                                            Start Preparing
+                                        </button>
+                                    )}
+                                    {order.status === 'preparing' && (
+                                        <button className="btn btn-success" style={{ flex: 1, backgroundColor: '#10b981', color: 'white', padding: '1rem', fontSize: '1.1rem' }} onClick={() => updateOrderStatus(order.id, 'done')}>
+                                            ✅ Mark as Done
+                                        </button>
+                                    )}
+                                    {order.status === 'done' && (
+                                        <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} disabled>
+                                            Completed
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-
-                            <div className={`status-badge ${order.status}`} style={{ marginBottom: '1rem' }}>
-                                {order.status === 'new' && 'New Order'}
-                                {order.status === 'preparing' && '🔥 PREPARING'}
-                                {order.status === 'done' && 'Done'}
-                            </div>
-
-                            <div className="order-items" style={{ marginBottom: '1rem', flex: 1 }}>
-                                {order.items.map((item, index) => (
-                                    <div key={index} className="order-item" style={{ padding: '0.35rem 0' }}>
-                                        <span>{item.name}</span>
-                                        <span className="item-quantity">×{item.quantity}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '1rem',
-                                fontWeight: 600
-                            }}>
-                                <span>Total</span>
-                                <span>₹{order.total}</span>
-                            </div>
-
-                            <div className="order-actions">
-                                {order.status === 'new' && (
-                                    <button
-                                        className="btn btn-primary"
-                                        style={{ flex: 1 }}
-                                        onClick={() => updateOrderStatus(order.id, 'preparing')}
-                                    >
-                                        Start Preparing
-                                    </button>
-                                )}
-                                {order.status === 'preparing' && (
-                                    <button
-                                        className="btn btn-success"
-                                        style={{
-                                            flex: 1,
-                                            backgroundColor: '#10b981',
-                                            color: 'white',
-                                            padding: '1rem',
-                                            fontSize: '1.1rem'
-                                        }}
-                                        onClick={() => updateOrderStatus(order.id, 'done')}
-                                    >
-                                        ✅ Mark as Done
-                                    </button>
-                                )}
-                                {order.status === 'done' && (
-                                    <button
-                                        className="btn btn-secondary btn-sm"
-                                        style={{ flex: 1 }}
-                                        disabled
-                                    >
-                                        Completed
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {sortedOrders.length === 0 && (
                 <div className="text-center text-secondary" style={{ marginTop: '3rem' }}>
