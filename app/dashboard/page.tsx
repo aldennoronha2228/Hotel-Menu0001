@@ -113,26 +113,23 @@ export default function DashboardPage() {
 
             <div className="orders-grid" style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: '1.5rem',
-                alignItems: 'start' // Prevents stretching
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '1rem',
+                alignItems: 'start'
             }}>
                 {sortedOrders.map(order => {
                     const isPreparing = order.status === 'preparing';
                     const isDone = order.status === 'done';
 
-                    // Dynamic styles based on status
-                    const cardStyle: React.CSSProperties = isPreparing ? {
-                        gridColumn: 'span 2', // Take up 2 columns
-                        transform: 'scale(1.02)',
-                        border: '2px solid var(--color-primary)',
-                        boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
-                        fontSize: '1.1rem'
-                    } : isDone ? {
-                        opacity: 0.7,
-                        transform: 'scale(0.95)',
-                        fontSize: '0.9rem'
-                    } : {};
+                    // Compact styling for all cards
+                    const cardStyle: React.CSSProperties = {
+                        border: isPreparing ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        backgroundColor: isPreparing ? '#fffbf0' : 'var(--color-bg)',
+                        transform: isPreparing ? 'translateY(-4px)' : 'none',
+                        boxShadow: isPreparing ? '0 8px 24px rgba(255,153,0,0.15)' : '0 2px 4px rgba(0,0,0,0.05)',
+                        opacity: isDone ? 0.6 : 1,
+                        fontSize: '0.95rem'
+                    };
 
                     return (
                         <div
@@ -140,12 +137,11 @@ export default function DashboardPage() {
                             className={`order-card ${order.status}`}
                             style={cardStyle}
                         >
-                            <div className="order-header" style={{ marginBottom: isPreparing ? '1.5rem' : '1rem' }}>
+                            <div className="order-header" style={{ marginBottom: '1rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                         <div className="table-badge" style={{
-                                            fontSize: isPreparing ? '1.2rem' : '1rem',
-                                            padding: isPreparing ? '0.5rem 1rem' : '0.25rem 0.75rem',
+                                            padding: '0.25rem 0.75rem',
                                             backgroundColor: isPreparing ? 'var(--color-primary)' : 'var(--color-bg-secondary)',
                                             color: isPreparing ? 'white' : 'var(--color-text)'
                                         }}>
@@ -183,17 +179,11 @@ export default function DashboardPage() {
                                 {order.status === 'done' && 'Done'}
                             </div>
 
-                            <div className="order-items" style={{ marginBottom: isPreparing ? '1.5rem' : '1rem' }}>
+                            <div className="order-items" style={{ marginBottom: '1rem', flex: 1 }}>
                                 {order.items.map((item, index) => (
-                                    <div key={index} className="order-item" style={{
-                                        padding: isPreparing ? '0.75rem 0' : '0.5rem 0',
-                                        fontSize: isPreparing ? '1.1rem' : '1rem'
-                                    }}>
+                                    <div key={index} className="order-item" style={{ padding: '0.35rem 0' }}>
                                         <span>{item.name}</span>
-                                        <span className="item-quantity" style={{
-                                            backgroundColor: isPreparing ? 'var(--color-primary-light)' : '#eee',
-                                            fontSize: isPreparing ? '1rem' : '0.85rem'
-                                        }}>×{item.quantity}</span>
+                                        <span className="item-quantity">×{item.quantity}</span>
                                     </div>
                                 ))}
                             </div>
@@ -202,9 +192,8 @@ export default function DashboardPage() {
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                marginBottom: isPreparing ? '1.5rem' : '1rem',
-                                fontWeight: 600,
-                                fontSize: isPreparing ? '1.25rem' : '1rem'
+                                marginBottom: '1rem',
+                                fontWeight: 600
                             }}>
                                 <span>Total</span>
                                 <span>₹{order.total}</span>
