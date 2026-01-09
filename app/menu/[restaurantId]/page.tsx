@@ -91,18 +91,32 @@ export default function MenuPage({
         setCart(cart.filter(item => item.id !== itemId));
     };
 
-    const placeOrder = () => {
-        console.log('Order placed:', {
-            restaurantId: params.restaurantId,
-            tableNumber,
-            items: cart,
-            total: getTotalPrice(),
-            timestamp: new Date().toISOString()
-        });
+    const placeOrder = async () => {
+        try {
+            const response = await fetch('/api/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    restaurantId: params.restaurantId,
+                    tableNumber,
+                    items: cart,
+                    total: getTotalPrice()
+                }),
+            });
 
-        setCart([]);
-        setShowCart(false);
-        setShowConfirmation(true);
+            if (!response.ok) {
+                throw new Error('Failed to place order');
+            }
+
+            setCart([]);
+            setShowCart(false);
+            setShowConfirmation(true);
+        } catch (error) {
+            console.error('Error placing order:', error);
+            alert('Failed to place order. Please try again.');
+        }
     };
 
     const getTotalItems = () => cart.reduce((sum, item) => sum + item.quantity, 0);

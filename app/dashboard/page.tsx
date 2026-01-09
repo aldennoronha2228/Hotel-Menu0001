@@ -1,18 +1,57 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Order } from '@/lib/types';
-import { mockOrders } from '@/lib/mockOrders';
 
 export default function DashboardPage() {
-    const [orders, setOrders] = useState<Order[]>(mockOrders);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-        setOrders(orders.map(order =>
-            order.id === orderId
-                ? { ...order, status: newStatus }
-                : order
-        ));
+    // Fetch orders from API
+    useEffect(() => {
+        fetchOrders();
+
+        // Poll for new orders every 5 seconds
+        const interval = setInterval(fetchOrders, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const fetchOrders = async () => {
+        try {
+            const response = await fetch('/api/orders');
+            if (response.ok) {
+                const data = await response.json();
+                setOrders(data);
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+        try {
+            const response = await fetch(`/api/orders/${orderId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+
+            if (response.ok) {
+                // Update local state immediately
+                setOrders(orders.map(order =>
+                    order.id === orderId
+                        ? { ...order, status: newStatus }
+                        : order
+                ));
+            }
+        } catch (error) {
+            console.error('Error updating order:', error);
+            alert('Failed to update order status');
+        }
     };
 
     const formatTime = (timestamp: string) => {
@@ -36,11 +75,21 @@ export default function DashboardPage() {
         return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
 
+    if (loading) {
+        return (
+            <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <p>Loading orders...</p>
+            </div>
+        );
+    }
+
     return (
         <>
             <header className="dashboard-header">
                 <h1>Live Orders</h1>
-                <p className="text-secondary">{orders.filter(o => o.status !== 'done').length} active orders</p>
+                <p className="text-secondary">
+                    {orders.filter(o => o.status !== 'done').length} active orders
+                </p>
             </header>
 
             <div className="orders-grid">
@@ -113,6 +162,9 @@ export default function DashboardPage() {
             {sortedOrders.length === 0 && (
                 <div className="text-center text-secondary" style={{ marginTop: '3rem' }}>
                     <p>No orders yet</p>
+                    <p style={{ fontSize: 'var(--font-size-sm)', marginTop: '0.5rem' }}>
+                        Orders will appear here when customers place them
+                    </p>
                 </div>
             )}
         </>

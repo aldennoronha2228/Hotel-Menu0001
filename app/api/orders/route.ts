@@ -1,0 +1,92 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
+
+// GET all orders
+export async function GET() {
+    try {
+        const { data: orders, error: ordersError } = await supabase
+            .from('orders')
+            .select('*, order_items(*)')
+            .order('created_at', { ascending: false });
+
+        if (ordersError) throw ordersError;
+
+        // Transform the data to match the expected format
+        const formattedOrders = orders.map(order => ({
+            id: order.id,
+            restaurantId: order.restaurant_id,
+            tableNumber: order.table_number,
+            items: order.order_items.map((item: any) => ({
+                id: item.menu_item_id,
+                name: item.item_name,
+                price: parseFloat(item.item_price),
+                quantity: item.quantity
+            })),
+            total: parseFloat(order.total),
+            status: order.status,
+            timestamp: order.created_at
+        }));
+
+        return NextResponse.json(formattedOrders);
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch orders' },
+            { status: 500 }
+        );
+    }
+}
+
+// POST create new order
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const { restaurantId, tableNumber, items, total } = body;
+
+        // Insert order
+        const { data: order, error: orderError } = await supabase
+            .from('orders')
+            .insert([
+                {
+                    restaurant_id: restaurantId,
+                    table_number: tableNumber,
+                    total,
+                    status: 'new'
+                }
+            ])
+            .select()
+            .single();
+
+        if (orderError) throw orderError;
+
+        // Insert order items
+        const orderItems = items.map((item: any) => ({
+            order_id: order.id,
+            menu_item_id: item.id,
+            item_name: item.name,
+            item_price: item.price,
+            quantity: item.quantity
+        }));
+
+        const { error: itemsError } = await supabase
+            .from('order_items')
+            .insert(orderItems);
+
+        if (itemsError) throw itemsError;
+
+        return NextResponse.json(
+            {
+                success: true,
+                orderId: order.id,
+                message: 'Order placed successfully'
+            },
+            { status: 201 }
+        );
+    } catch (error) {
+        console.error('Error creating order:', error);
+        return NextResponse.json(
+            { error: 'Failed to create order' },
+            { status: 500 }
+        );
+    }
+}
