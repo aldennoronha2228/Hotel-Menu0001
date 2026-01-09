@@ -10,6 +10,7 @@ export default function DashboardPage() {
     const [selectedTable, setSelectedTable] = useState<number | null>(null);
     const [showMap, setShowMap] = useState(true);
     const [showAll, setShowAll] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Fetch orders from API
     useEffect(() => {
@@ -26,17 +27,19 @@ export default function DashboardPage() {
             if (response.ok) {
                 const data = await response.json();
                 setOrders(data);
+                setError(null);
             } else {
                 const errorData = await response.json();
                 console.error('Fetch error:', errorData);
-                // Only alert on specific errors if needed, or set error state
                 if (response.status === 401) {
-                    // Optionally show a visual error instead of alert loop
-                    console.warn("Unauthorized access to orders");
+                    setError(errorData.error || "Unauthorized: Check Owner Email Config in Deployment");
+                } else {
+                    setError(errorData.error || "Failed to fetch orders");
                 }
             }
         } catch (error) {
             console.error('Error fetching orders:', error);
+            // Don't set global error for network transient issues to avoid flashing
         } finally {
             setLoading(false);
         }
@@ -52,6 +55,7 @@ export default function DashboardPage() {
 
             if (response.ok) {
                 setOrders(orders.map(order => order.id === orderId ? { ...order, status: newStatus } : order));
+                setError(null);
             }
         } catch (error) { console.error(error); alert('Failed to update'); }
     };
@@ -129,6 +133,26 @@ export default function DashboardPage() {
                     </p>
                 </div>
             </header>
+
+            {error && (
+                <div style={{
+                    backgroundColor: '#fee2e2',
+                    border: '1px solid #ef4444',
+                    color: '#b91c1c',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    marginBottom: '1rem',
+                    textAlign: 'center',
+                    fontWeight: 600,
+                    maxWidth: '800px',
+                    margin: '0 auto 1.5rem auto'
+                }}>
+                    ⚠️ {error} <br />
+                    <span style={{ fontWeight: 400, fontSize: '0.9rem', display: 'block', marginTop: '0.5rem' }}>
+                        Action Required: Go to your Hosting Settings (Environment Variables) and ensure <code>OWNER_EMAIL</code> is set correctly.
+                    </span>
+                </div>
+            )}
 
             {/* Mini Map Section */}
             <div style={{
@@ -289,7 +313,7 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {sortedOrders.length === 0 && (
+            {sortedOrders.length === 0 && !error && (
                 <div className="text-center text-secondary" style={{ marginTop: '3rem' }}>
                     <p>No active orders</p>
                     <p style={{ fontSize: 'var(--font-size-sm)', marginTop: '0.5rem' }}>
