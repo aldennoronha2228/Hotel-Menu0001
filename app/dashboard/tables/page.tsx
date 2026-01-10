@@ -1,14 +1,8 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import FloorPlan from '@/components/FloorPlan';
-
-interface TablePosition {
-    id: number;
-    x: number;
-    y: number;
-}
+import FloorPlan, { TablePosition } from '@/components/FloorPlan';
 
 export default function TablesPage() {
     const [viewMode, setViewMode] = useState<'qr' | 'map'>('map');
@@ -17,11 +11,9 @@ export default function TablesPage() {
     const [qrCodes, setQrCodes] = useState<{ [key: number]: string }>({});
     const [mounted, setMounted] = useState(false);
 
-    // Floor plan state
+    // Floor plan state (Controlled)
     const [positions, setPositions] = useState<TablePosition[]>([]);
     const [activeTables, setActiveTables] = useState<number[]>([]);
-    const [isDragging, setIsDragging] = useState<number | null>(null);
-    const dragOffset = useRef({ x: 0, y: 0 });
 
     // Load active orders to show status
     useEffect(() => {
@@ -99,7 +91,6 @@ export default function TablesPage() {
 
         // Generate QRs
         const generateQRCodes = async () => {
-            // ... logic same ...
             const codes: { [key: number]: string } = {};
             for (const tableNumber of tables) {
                 const url = `${window.location.origin}/menu/rest001?table=${tableNumber}`;
@@ -116,15 +107,12 @@ export default function TablesPage() {
 
     }, [tables]);
 
-    // Save layout
+    // Save layout whenever positions change
     useEffect(() => {
         if (positions.length > 0) {
             localStorage.setItem('tableLayout', JSON.stringify(positions));
         }
     }, [positions]);
-
-    // Drag Handlers rely on existing state, no change needed in handlers, 
-    // but we need to ensure FloorPlan receives correct data.
 
     const handleDownloadQR = (tableNumber: number) => {
         const qrDataUrl = qrCodes[tableNumber];
@@ -199,6 +187,8 @@ export default function TablesPage() {
                         tables={tables}
                         activeTables={activeTables}
                         readOnly={false}
+                        positions={positions}
+                        onPositionsChange={setPositions}
                     />
                 </div>
             ) : (

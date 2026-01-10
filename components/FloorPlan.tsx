@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 
-interface TablePosition {
+export interface TablePosition {
     id: number;
     x: number;
     y: number;
@@ -15,6 +15,8 @@ interface FloorPlanProps {
     readOnly?: boolean;
     scale?: number;
     height?: number | string;
+    positions?: TablePosition[];
+    onPositionsChange?: (positions: TablePosition[]) => void;
 }
 
 const DEFAULT_TABLES = Array.from({ length: 15 }, (_, i) => i + 1);
@@ -25,36 +27,62 @@ export default function FloorPlan({
     onTableClick,
     readOnly = false,
     scale = 1,
-    height = '600px'
+    height = '600px',
+    positions: controlledPositions,
+    onPositionsChange
 }: FloorPlanProps) {
-    const [positions, setPositions] = useState<TablePosition[]>([]);
+    const [internalPositions, setInternalPositions] = useState<TablePosition[]>([]);
     const [isDragging, setIsDragging] = useState<number | null>(null);
     const dragOffset = useRef({ x: 0, y: 0 });
     const [mounted, setMounted] = useState(false);
 
-    // Load layout
+    const isControlled = controlledPositions !== undefined;
+    const positions = isControlled ? controlledPositions! : internalPositions;
+
+    // Load layout (Internal Mode Only)
     useEffect(() => {
         setMounted(true);
+        if (isControlled) return;
+
         const savedLayout = localStorage.getItem('tableLayout');
+        let initialPos: TablePosition[] = [];
+
         if (savedLayout) {
-            setPositions(JSON.parse(savedLayout));
+            initialPos = JSON.parse(savedLayout);
         } else {
             // Default grid layout
-            const defaultLayout = tables.map((id, index) => ({
+            initialPos = tables.map((id, index) => ({
                 id,
                 x: (index % 5) * 120 + 20,
                 y: Math.floor(index / 5) * 120 + 20
             }));
-            setPositions(defaultLayout);
         }
-    }, [tables]);
 
-    // Save layout
+        // Sync with tables prop (Remove invalid, Add missing)
+        // This ensures the Mini Map updates if configuration changes elsewhere
+        let mergedPos = initialPos.filter(p => tables.includes(p.id));
+        const existingIds = new Set(mergedPos.map(p => p.id));
+        const missing = tables.filter(id => !existingIds.has(id));
+
+        if (missing.length > 0) {
+            const added = missing.map((id, index) => ({
+                id,
+                x: ((id - 1) % 5) * 120 + 20,
+                y: Math.floor((id - 1) / 5) * 120 + 20
+            }));
+            mergedPos = [...mergedPos, ...added];
+        }
+
+        setInternalPositions(mergedPos);
+
+    }, [tables, isControlled]);
+
+    // Save layout (Internal Mode Only)
     useEffect(() => {
-        if (positions.length > 0 && !readOnly) {
+        if (!isControlled && positions.length > 0 && !readOnly) {
             localStorage.setItem('tableLayout', JSON.stringify(positions));
         }
-    }, [positions, readOnly]);
+    }, [positions, readOnly, isControlled]);
 
     const handleDragStart = (e: React.MouseEvent, tableId: number) => {
         if (readOnly) return;
@@ -73,9 +101,15 @@ export default function FloorPlan({
             const newX = e.clientX - dragOffset.current.x;
             const newY = e.clientY - dragOffset.current.y;
 
-            setPositions(prev => prev.map(p =>
+            const updatedPositions = positions.map(p =>
                 p.id === isDragging ? { ...p, x: newX, y: newY } : p
-            ));
+            );
+
+            if (isControlled && onPositionsChange) {
+                onPositionsChange(updatedPositions);
+            } else {
+                setInternalPositions(updatedPositions);
+            }
         }
     };
 
@@ -117,7 +151,7 @@ export default function FloorPlan({
                                 width: '80px',
                                 height: '80px',
                                 borderRadius: '50%',
-                                backgroundColor: isActive ? '#fef08a' : 'white', // Yellow if active
+                                backgroundColor: isActive ? '#fef08a' : 'white',
                                 border: `3px solid ${isActive ? '#eab308' : '#e2e8f0'}`,
                                 boxShadow: isDragging === pos.id ? '0 10px 25px rgba(0,0,0,0.2)' : '0 4px 6px rgba(0,0,0,0.1)',
                                 display: 'flex',
