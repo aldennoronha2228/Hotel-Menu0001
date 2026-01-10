@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-
 import { currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { isOwner } from '@/lib/auth';
 
 async function checkOwner() {
     const user = await currentUser();
-    const ownerEmail = process.env.OWNER_EMAIL;
     const userEmail = user?.emailAddresses?.[0]?.emailAddress;
-    return ownerEmail && userEmail === ownerEmail;
+    return isOwner(userEmail);
 }
 
 // PATCH update menu item

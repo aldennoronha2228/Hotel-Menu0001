@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { currentUser } from '@clerk/nextjs/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+import { isOwner } from '@/lib/auth';
 
-// GET all menu items with categories
 export const dynamic = 'force-dynamic';
 
+// GET all menu items with categories
 export async function GET() {
     try {
         // Use Admin client if available to bypass RLS (so we can see Unavailable items)
@@ -33,23 +36,19 @@ export async function GET() {
 }
 
 // POST create new menu item
-import { currentUser } from '@clerk/nextjs/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
-
 export async function POST(request: NextRequest) {
     try {
         // Authenticate Owner
         const user = await currentUser();
-        const ownerEmail = process.env.OWNER_EMAIL;
         const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-        if (!ownerEmail) {
+        if (!process.env.OWNER_EMAIL) {
             console.error('OWNER_EMAIL not set in environment variables');
             return NextResponse.json({ error: 'Server Authorization Config Missing' }, { status: 500 });
         }
 
-        if (userEmail !== ownerEmail) {
-            console.warn(`Unauthorized access attempt by ${userEmail} (expected ${ownerEmail})`);
+        if (!isOwner(userEmail)) {
+            console.warn(`Unauthorized access attempt by ${userEmail}`);
             return NextResponse.json({ error: 'Unauthorized: You are not the owner' }, { status: 401 });
         }
 

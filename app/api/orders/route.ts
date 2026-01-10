@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-
-// GET orders (Owner gets all, Public gets Table-specific)
 import { currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { isOwner } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
+// GET orders (Owner gets all, Public gets Table-specific)
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
@@ -16,16 +16,15 @@ export async function GET(request: NextRequest) {
         let isAdmin = false;
         if (!tableFilter) {
             const user = await currentUser();
-            const ownerEmail = process.env.OWNER_EMAIL;
             const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-            if (ownerEmail && userEmail && userEmail.toLowerCase() === ownerEmail.toLowerCase()) {
+            if (isOwner(userEmail)) {
                 isAdmin = true;
                 if (!supabaseAdmin) {
                     return NextResponse.json({ error: 'Server Config Error: SUPABASE_SERVICE_ROLE_KEY is missing' }, { status: 500 });
                 }
             } else {
-                console.error(`Auth Failed: User=${userEmail}, Owner=${ownerEmail}`);
+                console.error(`Auth Failed: User=${userEmail}, Owners=${process.env.OWNER_EMAIL}`);
                 return NextResponse.json({ error: 'Unauthorized: Access Denied. Check OWNER_EMAIL config.' }, { status: 401 });
             }
         }
