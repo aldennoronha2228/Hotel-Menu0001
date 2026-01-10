@@ -11,6 +11,18 @@ export default function DashboardPage() {
     const [showMap, setShowMap] = useState(true);
     const [showAll, setShowAll] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [tables, setTables] = useState<number[]>(Array.from({ length: 15 }, (_, i) => i + 1));
+
+    // Load table count from local storage
+    useEffect(() => {
+        const savedCount = localStorage.getItem('tableCount');
+        if (savedCount) {
+            const count = parseInt(savedCount);
+            if (!isNaN(count)) {
+                setTables(Array.from({ length: count }, (_, i) => i + 1));
+            }
+        }
+    }, []);
 
     // Fetch orders from API
     useEffect(() => {
@@ -186,6 +198,7 @@ export default function DashboardPage() {
 
                 {showMap && (
                     <FloorPlan
+                        tables={tables}
                         activeTables={activeTableNumbers}
                         onTableClick={(id) => setSelectedTable(prev => prev === id ? null : id)}
                         readOnly={true}
