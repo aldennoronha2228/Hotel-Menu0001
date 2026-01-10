@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import QRCode from 'qrcode';
-import { supabase } from '@/lib/supabase';
 import FloorPlan from '@/components/FloorPlan';
 
 interface TablePosition {
@@ -13,7 +12,8 @@ interface TablePosition {
 
 export default function TablesPage() {
     const [viewMode, setViewMode] = useState<'qr' | 'map'>('map');
-    const [tables] = useState(Array.from({ length: 15 }, (_, i) => i + 1));
+    const [tableCount, setTableCount] = useState(15);
+    const [tables, setTables] = useState<number[]>([]);
     const [qrCodes, setQrCodes] = useState<{ [key: number]: string }>({});
     const [mounted, setMounted] = useState(false);
 
@@ -49,24 +49,57 @@ export default function TablesPage() {
         return () => clearInterval(interval);
     }, []);
 
-    // Load layout from local storage
+    // Load Config and Layout from local storage on mount
     useEffect(() => {
         setMounted(true);
+        const savedCount = localStorage.getItem('tableCount');
+        const initialCount = savedCount ? parseInt(savedCount) : 15;
+        setTableCount(initialCount);
+
         const savedLayout = localStorage.getItem('tableLayout');
         if (savedLayout) {
             setPositions(JSON.parse(savedLayout));
-        } else {
-            // Default grid layout
-            const defaultLayout = tables.map((id, index) => ({
-                id,
-                x: (index % 5) * 120 + 20,
-                y: Math.floor(index / 5) * 120 + 20
-            }));
-            setPositions(defaultLayout);
         }
+    }, []);
+
+    // Sync `tables` array with `tableCount`
+    useEffect(() => {
+        const newTables = Array.from({ length: tableCount }, (_, i) => i + 1);
+        setTables(newTables);
+        localStorage.setItem('tableCount', tableCount.toString());
+    }, [tableCount]);
+
+    // Sync Positions when Tables change (Add new, Remove old)
+    useEffect(() => {
+        if (tables.length === 0) return;
+
+        setPositions(prev => {
+            // Keep existing positions that are still in valid tables
+            let newPositions = prev.filter(p => tables.includes(p.id));
+
+            // identifying missing tables
+            const existingIds = new Set(newPositions.map(p => p.id));
+            const missingTables = tables.filter(id => !existingIds.has(id));
+
+            // Add missing tables with default positions
+            if (missingTables.length > 0) {
+                const addedPositions = missingTables.map((id, index) => {
+                    // Try to place them in a grid, continuing from last known pos or just grid
+                    // Simple grid logic based on ID is consistent
+                    return {
+                        id,
+                        x: ((id - 1) % 5) * 120 + 20,
+                        y: Math.floor((id - 1) / 5) * 120 + 20
+                    };
+                });
+                newPositions = [...newPositions, ...addedPositions];
+            }
+            return newPositions;
+        });
 
         // Generate QRs
         const generateQRCodes = async () => {
+            // ... logic same ...
             const codes: { [key: number]: string } = {};
             for (const tableNumber of tables) {
                 const url = `${window.location.origin}/menu/rest001?table=${tableNumber}`;
@@ -80,6 +113,7 @@ export default function TablesPage() {
             setQrCodes(codes);
         };
         generateQRCodes();
+
     }, [tables]);
 
     // Save layout
@@ -89,31 +123,8 @@ export default function TablesPage() {
         }
     }, [positions]);
 
-    const handleDragStart = (e: React.MouseEvent, tableId: number) => {
-        const pos = positions.find(p => p.id === tableId);
-        if (pos) {
-            setIsDragging(tableId);
-            dragOffset.current = {
-                x: e.clientX - pos.x,
-                y: e.clientY - pos.y
-            };
-        }
-    };
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (isDragging !== null) {
-            const newX = e.clientX - dragOffset.current.x;
-            const newY = e.clientY - dragOffset.current.y;
-
-            setPositions(prev => prev.map(p =>
-                p.id === isDragging ? { ...p, x: newX, y: newY } : p
-            ));
-        }
-    };
-
-    const handleMouseUp = () => {
-        setIsDragging(null);
-    };
+    // Drag Handlers rely on existing state, no change needed in handlers, 
+    // but we need to ensure FloorPlan receives correct data.
 
     const handleDownloadQR = (tableNumber: number) => {
         const qrDataUrl = qrCodes[tableNumber];
@@ -128,24 +139,57 @@ export default function TablesPage() {
 
     return (
         <>
-            <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                    <h1>Tables & QR Codes</h1>
-                    <p className="text-secondary">{tables.length} tables configured</p>
+            <header className="dashboard-header" style={{ marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div>
+                        <h1>Tables & QR Codes</h1>
+                        <p className="text-secondary">Manage restaurant layout and QR codes</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                            className={`btn ${viewMode === 'map' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setViewMode('map')}
+                        >
+                            🗺️ Floor Plan
+                        </button>
+                        <button
+                            className={`btn ${viewMode === 'qr' ? 'btn-primary' : 'btn-secondary'}`}
+                            onClick={() => setViewMode('qr')}
+                        >
+                            📱 QR Codes
+                        </button>
+                    </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                        className={`btn ${viewMode === 'map' ? 'btn-primary' : 'btn-secondary'}`}
-                        onClick={() => setViewMode('map')}
-                    >
-                        🗺️ Floor Plan
-                    </button>
-                    <button
-                        className={`btn ${viewMode === 'qr' ? 'btn-primary' : 'btn-secondary'}`}
-                        onClick={() => setViewMode('qr')}
-                    >
-                        📱 QR Codes
-                    </button>
+
+                {/* Configuration Section */}
+                <div style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem'
+                }}>
+                    <label style={{ fontWeight: 600, color: '#4b5563' }}>Total Tables:</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setTableCount(prev => Math.max(1, prev - 1))}
+                            style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                        >-</button>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 'bold', minWidth: '30px', textAlign: 'center' }}>
+                            {tableCount}
+                        </span>
+                        <button
+                            className="btn btn-secondary btn-sm"
+                            onClick={() => setTableCount(prev => prev + 1)}
+                            style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                        >+</button>
+                    </div>
+                    <span style={{ fontSize: '0.9rem', color: '#6b7280', marginLeft: 'auto' }}>
+                        Changes are saved automatically to this device
+                    </span>
                 </div>
             </header>
 
