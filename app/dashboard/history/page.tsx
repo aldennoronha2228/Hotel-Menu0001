@@ -19,7 +19,8 @@ export default function OrderHistoryPage() {
 
     const fetchOrders = async () => {
         try {
-            const response = await fetch('/api/orders');
+            // Include all orders (including paid/cancelled) for history page
+            const response = await fetch('/api/orders?includeAll=true');
             if (response.ok) {
                 const data = await response.json();
                 setOrders(data);

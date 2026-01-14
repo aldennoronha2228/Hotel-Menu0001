@@ -38,7 +38,12 @@ export default function DashboardPage() {
             const response = await fetch('/api/orders');
             if (response.ok) {
                 const data = await response.json();
-                setOrders(data);
+                // Filter out paid and cancelled orders on the client side as well
+                // This is a safety net in case the API filter doesn't work
+                const activeData = data.filter((order: Order) =>
+                    order.status !== 'paid' && order.status !== 'cancelled'
+                );
+                setOrders(activeData);
                 setError(null);
             } else {
                 const errorData = await response.json();
@@ -58,6 +63,7 @@ export default function DashboardPage() {
     };
 
     const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
+        console.log('updateOrderStatus called:', orderId, newStatus);
         try {
             const response = await fetch(`/api/orders/${orderId}`, {
                 method: 'PATCH',
@@ -65,12 +71,40 @@ export default function DashboardPage() {
                 body: JSON.stringify({ status: newStatus }),
             });
 
+            console.log('Response status:', response.status, response.ok);
+
             if (response.ok) {
-                setOrders(orders.map(order => order.id === orderId ? { ...order, status: newStatus } : order));
+                console.log('Update successful! New status:', newStatus);
+                // If marking as paid or cancelled, REMOVE from state completely
+                if (newStatus === 'paid' || newStatus === 'cancelled') {
+                    console.log('Removing order from state:', orderId);
+                    setOrders(orders.filter(order => order.id !== orderId));
+                } else {
+                    // For other status changes, just update
+                    setOrders(orders.map(order => order.id === orderId ? { ...order, status: newStatus } : order));
+                }
                 setError(null);
+            } else {
+                const responseText = await response.text();
+                console.error('Failed to update - Status:', response.status);
+                console.error('Response body (text):', responseText);
+
+                let errorData: any = {};
+                try {
+                    errorData = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Could not parse response as JSON');
+                }
+
+                console.error('Failed to update:', errorData);
+                alert('Failed to update: ' + (errorData.error || errorData.details || 'Unknown error'));
             }
-        } catch (error) { console.error(error); alert('Failed to update'); }
+        } catch (error) {
+            console.error('Exception in updateOrderStatus:', error);
+            alert('Failed to update: ' + error);
+        }
     };
+
 
     const deleteOrder = async (orderId: string) => {
         if (!confirm('Are you sure you want to delete this order?')) return;
@@ -95,15 +129,15 @@ export default function DashboardPage() {
 
     // Filter and Sort orders
     // Show only ACTIVE orders (new, preparing, done) in the Live Dashboard
-    // Paid orders go to History
-    const activeOrders = orders.filter(o => o.status !== 'paid');
+    // Paid and cancelled orders are excluded from active view
+    const activeOrders = orders.filter(o => o.status !== 'paid' && o.status !== 'cancelled');
 
     const visibleOrders = selectedTable
         ? activeOrders.filter(o => parseInt(o.tableNumber) === selectedTable)
         : activeOrders;
 
     const sortedOrders = [...visibleOrders].sort((a, b) => {
-        const statusPriority = { preparing: 0, new: 1, done: 2, paid: 3 };
+        const statusPriority = { preparing: 0, new: 1, done: 2, paid: 3, cancelled: 4 };
         if (statusPriority[a.status] !== statusPriority[b.status]) {
             return statusPriority[a.status] - statusPriority[b.status];
         }
@@ -291,7 +325,15 @@ export default function DashboardPage() {
                                         <div className="btn btn-secondary btn-sm" style={{ textAlign: 'center', opacity: 0.8, cursor: 'default', backgroundColor: '#f3f4f6', color: '#374151' }}>
                                             Waiting Payment
                                         </div>
-                                        <button className="btn btn-primary" style={{ flex: 1, backgroundColor: '#8b5cf6', color: 'white', border: 'none' }} onClick={() => updateOrderStatus(order.id, 'paid')}>
+                                        <button
+                                            className="btn btn-primary"
+                                            style={{ flex: 1, backgroundColor: '#8b5cf6', color: 'white', border: 'none' }}
+                                            onClick={() => {
+                                                if (confirm('Mark this order as paid? It will be removed from the active dashboard.')) {
+                                                    updateOrderStatus(order.id, 'paid');
+                                                }
+                                            }}
+                                        >
                                             💰 Mark as Paid
                                         </button>
                                     </div>

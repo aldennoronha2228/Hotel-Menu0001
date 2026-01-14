@@ -30,8 +30,9 @@ export interface Order {
     tableNumber: string;
     items: CartItem[];
     total: number;
-    status: 'new' | 'preparing' | 'done' | 'paid';
+    status: 'new' | 'preparing' | 'done' | 'paid' | 'cancelled';
     timestamp: string;
+    user_id?: string; // Unique identifier for the customer who placed this order
 }
 
 export interface Restaurant {

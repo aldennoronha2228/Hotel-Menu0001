@@ -19,6 +19,7 @@ export default function MenuPage({
     const [cart, setCart] = useState<CartItem[]>([]);
     const [showCart, setShowCart] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
+    const [typeFilter, setTypeFilter] = useState<'all' | 'veg' | 'non-veg'>('all');
 
     // Bill / Active Orders State
     const [activeOrders, setActiveOrders] = useState<any[]>([]);
@@ -29,6 +30,23 @@ export default function MenuPage({
     const unwrappedSearchParams = use(searchParams);
 
     const tableNumber = unwrappedSearchParams.table || '0';
+
+    // Generate unique user ID for this customer session
+    const [userId, setUserId] = useState<string>('');
+
+    // Initialize user ID from localStorage or generate new one
+    useEffect(() => {
+        const storageKey = `userId_table_${tableNumber}`;
+        let storedUserId = localStorage.getItem(storageKey);
+
+        if (!storedUserId) {
+            // Generate a unique user ID: timestamp + random string
+            storedUserId = `user_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+            localStorage.setItem(storageKey, storedUserId);
+        }
+
+        setUserId(storedUserId);
+    }, [tableNumber]);
 
     // Fetch Menu Data
     useEffect(() => {
@@ -154,7 +172,8 @@ export default function MenuPage({
                     restaurantId: unwrappedParams.restaurantId,
                     tableNumber,
                     items: cart,
-                    total: getTotalPrice()
+                    total: getTotalPrice(),
+                    user_id: userId // Include user ID to track who placed this order
                 }),
             });
 
@@ -186,9 +205,17 @@ export default function MenuPage({
     const getTotalItems = () => cart.reduce((sum, item) => sum + item.quantity, 0);
     const getTotalPrice = () => cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const getCartItem = (itemId: string) => cart.find(item => item.id === itemId);
-    const getBillTotal = () => activeOrders.reduce((sum, order) => sum + order.total, 0);
 
-    const filteredItems = menuItems.filter(item => item.category_id === currentCategory);
+    // Filter orders to show only current user's orders
+    const userOrders = activeOrders.filter(order => order.user_id === userId);
+    const getBillTotal = () => userOrders.reduce((sum, order) => sum + order.total, 0);
+
+    // Filter items by category and type (veg/non-veg)
+    const filteredItems = menuItems.filter(item => {
+        const matchesCategory = item.category_id === currentCategory;
+        const matchesType = typeFilter === 'all' || item.type === typeFilter;
+        return matchesCategory && matchesType;
+    });
 
     if (loading) return <div className="p-4 text-center">Loading menu...</div>;
 
@@ -201,7 +228,7 @@ export default function MenuPage({
                         <h1>{mockRestaurant.name} (Online Menu)</h1>
                         <p className="table-number">Table {tableNumber}</p>
                     </div>
-                    {activeOrders.length > 0 && (
+                    {userOrders.length > 0 && (
                         <button
                             className="btn btn-secondary btn-sm"
                             onClick={() => setShowBill(true)}
@@ -225,6 +252,41 @@ export default function MenuPage({
                     </button>
                 ))}
             </nav>
+
+            {/* Veg/Non-Veg Filter */}
+            <div style={{
+                display: 'flex',
+                gap: '0.5rem',
+                padding: '0.75rem 1rem',
+                backgroundColor: 'var(--color-bg)',
+                borderBottom: '1px solid var(--color-border)',
+                justifyContent: 'center',
+                flexWrap: 'wrap'
+            }}>
+                <button
+                    className={`btn btn-sm ${typeFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setTypeFilter('all')}
+                    style={{ minWidth: '80px' }}
+                >
+                    All
+                </button>
+                <button
+                    className={`btn btn-sm ${typeFilter === 'veg' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setTypeFilter('veg')}
+                    style={{ minWidth: '80px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                >
+                    <span className="veg-indicator veg" style={{ width: '14px', height: '14px', margin: 0 }}></span>
+                    Veg
+                </button>
+                <button
+                    className={`btn btn-sm ${typeFilter === 'non-veg' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setTypeFilter('non-veg')}
+                    style={{ minWidth: '100px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                >
+                    <span className="veg-indicator non-veg" style={{ width: '14px', height: '14px', margin: 0 }}></span>
+                    Non-Veg
+                </button>
+            </div>
 
             {/* Menu Items */}
             <div className="menu-container">
@@ -376,26 +438,30 @@ export default function MenuPage({
                             <button className="btn-icon btn-secondary" onClick={() => setShowBill(false)}>✕</button>
                         </div>
                         <div className="modal-content">
-                            {activeOrders.map(order => (
-                                <div key={order.id} className="order-summary-card" style={{
-                                    border: '1px solid #eee', padding: '1rem', marginBottom: '1rem', borderRadius: '8px'
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                        <span className={`status-badge ${order.status}`}>{order.status.toUpperCase()}</span>
-                                        <span style={{ fontSize: '0.9rem', color: '#666' }}>Order #{order.id.slice(0, 4)}</span>
-                                    </div>
-                                    {order.items.map((img: any, idx: number) => (
-                                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', marginBottom: '0.2rem' }}>
-                                            <span>{img.name} x{img.quantity}</span>
-                                            <span>₹{img.price * img.quantity}</span>
+                            {userOrders.length === 0 ? (
+                                <p className="text-center text-secondary">You haven't placed any orders yet</p>
+                            ) : (
+                                userOrders.map(order => (
+                                    <div key={order.id} className="order-summary-card" style={{
+                                        border: '1px solid #eee', padding: '1rem', marginBottom: '1rem', borderRadius: '8px'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                            <span className={`status-badge ${order.status}`}>{order.status.toUpperCase()}</span>
+                                            <span style={{ fontSize: '0.9rem', color: '#666' }}>Order #{order.id.slice(0, 4)}</span>
                                         </div>
-                                    ))}
-                                    <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #ddd', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
-                                        <span>Total</span>
-                                        <span>₹{order.total}</span>
+                                        {order.items.map((img: any, idx: number) => (
+                                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', marginBottom: '0.2rem' }}>
+                                                <span>{img.name} x{img.quantity}</span>
+                                                <span>₹{img.price * img.quantity}</span>
+                                            </div>
+                                        ))}
+                                        <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #ddd', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                                            <span>Total</span>
+                                            <span>₹{order.total}</span>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                         <div className="modal-footer">
                             <div className="modal-footer-content">

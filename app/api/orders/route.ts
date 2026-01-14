@@ -11,6 +11,8 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const tableFilter = searchParams.get('table');
+        const userIdFilter = searchParams.get('userId');
+        const includeAll = searchParams.get('includeAll') === 'true';
 
         // Check Auth
         let isAdmin = false;
@@ -44,6 +46,17 @@ export async function GET(request: NextRequest) {
             query = query.gt('created_at', twelveHoursAgo);
         }
 
+        // For admin dashboard: exclude paid and cancelled orders by default
+        // UNLESS includeAll=true (for history page)
+        if (isAdmin && !includeAll) {
+            query = query.neq('status', 'paid').neq('status', 'cancelled');
+        }
+
+        // Filter by user_id if provided (for individual bill viewing)
+        if (userIdFilter) {
+            query = query.eq('user_id', userIdFilter);
+        }
+
         const { data: orders, error: ordersError } = await query;
 
         if (ordersError) throw ordersError;
@@ -61,7 +74,8 @@ export async function GET(request: NextRequest) {
             })),
             total: parseFloat(order.total),
             status: order.status,
-            timestamp: order.created_at
+            timestamp: order.created_at,
+            user_id: order.user_id // Include user_id for filtering
         }));
 
         return NextResponse.json(formattedOrders);
@@ -75,7 +89,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { restaurantId, tableNumber, items, total } = body;
+        const { restaurantId, tableNumber, items, total, user_id } = body;
 
         // Check if Supabase is configured
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -101,7 +115,8 @@ export async function POST(request: NextRequest) {
                     restaurant_id: restaurantId,
                     table_number: tableNumber,
                     total,
-                    status: 'new'
+                    status: 'new',
+                    user_id: user_id || null // Store user_id for individual tracking
                 }
             ])
             .select()

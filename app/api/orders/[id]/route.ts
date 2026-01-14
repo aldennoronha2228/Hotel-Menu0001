@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // PATCH update order status
 export async function PATCH(
@@ -11,20 +12,33 @@ export async function PATCH(
         const { id } = await context.params;
         const { status } = body;
 
-        const { data, error } = await supabase
+        console.log('PATCH /api/orders/[id] - Updating order:', id, 'to status:', status);
+
+        // Use admin client to bypass RLS
+        const client = supabaseAdmin || supabase;
+
+        const { data, error } = await client
             .from('orders')
             .update({ status })
             .eq('id', id)
             .select()
             .single();
 
-        if (error) throw error;
+        if (error) {
+            console.error('Database error:', error);
+            throw error;
+        }
 
+        console.log('Order updated successfully:', data);
         return NextResponse.json(data);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error updating order:', error);
         return NextResponse.json(
-            { error: 'Failed to update order' },
+            {
+                error: 'Failed to update order',
+                details: error?.message || error?.toString() || 'Unknown error',
+                code: error?.code
+            },
             { status: 500 }
         );
     }
@@ -38,7 +52,10 @@ export async function DELETE(
     try {
         const { id } = await context.params;
 
-        const { error } = await supabase
+        // Use admin client to bypass RLS
+        const client = supabaseAdmin || supabase;
+
+        const { error } = await client
             .from('orders')
             .delete()
             .eq('id', id);
