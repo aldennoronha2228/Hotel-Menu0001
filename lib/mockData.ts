@@ -6,7 +6,7 @@ import { Restaurant, Category, MenuItem } from './types';
 
 export const mockRestaurant: Restaurant = {
     id: 'rest001',
-    name: 'The Golden Spoon',
+    name: 'Basil Cafe',
 };
 
 export const mockCategories: Category[] = [

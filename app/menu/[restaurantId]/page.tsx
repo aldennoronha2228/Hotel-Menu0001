@@ -20,6 +20,7 @@ export default function MenuPage({
     const [showCart, setShowCart] = useState(false);
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [typeFilter, setTypeFilter] = useState<'all' | 'veg' | 'non-veg'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
 
     // Bill / Active Orders State
     const [activeOrders, setActiveOrders] = useState<any[]>([]);
@@ -210,35 +211,126 @@ export default function MenuPage({
     const userOrders = activeOrders.filter(order => order.user_id === userId);
     const getBillTotal = () => userOrders.reduce((sum, order) => sum + order.total, 0);
 
-    // Filter items by category and type (veg/non-veg)
+    // Filter items by category, type (veg/non-veg), and search query
     const filteredItems = menuItems.filter(item => {
-        const matchesCategory = item.category_id === currentCategory;
+        const matchesCategory = searchQuery.trim() ? true : item.category_id === currentCategory;
         const matchesType = typeFilter === 'all' || item.type === typeFilter;
-        return matchesCategory && matchesType;
+        const matchesSearch = searchQuery.trim()
+            ? item.name.toLowerCase().includes(searchQuery.toLowerCase())
+            : true;
+        return matchesCategory && matchesType && matchesSearch;
     });
 
     if (loading) return <div className="p-4 text-center">Loading menu...</div>;
 
+
     return (
-        <>
+        <div className="menu-page-wrapper">
             {/* Header */}
             <header className="header-customer">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <h1>{mockRestaurant.name} (Online Menu)</h1>
-                        <p className="table-number">Table {tableNumber}</p>
-                    </div>
-                    {userOrders.length > 0 && (
+                <h1>{mockRestaurant.name}</h1>
+                <p className="table-number">Table {tableNumber}</p>
+                {userOrders.length > 0 && (
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => setShowBill(true)}
+                        style={{
+                            marginTop: '0.75rem',
+                            fontSize: '0.875rem',
+                            padding: '0.5rem 1.25rem',
+                            minHeight: '40px'
+                        }}
+                    >
+                        View Bill (₹{getBillTotal()})
+                    </button>
+                )}
+            </header>
+
+            {/* Search Bar */}
+            <div style={{
+                padding: '1.25rem 1.5rem',
+                backgroundColor: 'var(--color-bg-primary)',
+                borderBottom: '1px solid var(--color-border-light)'
+            }}>
+                <div style={{
+                    maxWidth: '640px',
+                    margin: '0 auto',
+                    position: 'relative'
+                }}>
+                    <input
+                        type="text"
+                        placeholder="Search dishes..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '0.875rem 1rem 0.875rem 3rem',
+                            fontSize: '0.9375rem',
+                            fontFamily: 'var(--font-primary)',
+                            color: 'var(--color-text-primary)',
+                            backgroundColor: 'white',
+                            border: '1.5px solid var(--color-border)',
+                            borderRadius: 'var(--radius-full)',
+                            outline: 'none',
+                            transition: 'all 0.25s ease',
+                        }}
+                        onFocus={(e) => {
+                            e.target.style.borderColor = 'var(--color-basil-green)';
+                            e.target.style.boxShadow = '0 2px 8px rgba(45, 122, 79, 0.12)';
+                        }}
+                        onBlur={(e) => {
+                            e.target.style.borderColor = 'var(--color-border)';
+                            e.target.style.boxShadow = 'none';
+                        }}
+                    />
+                    <span style={{
+                        position: 'absolute',
+                        left: '1.125rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        fontSize: '1.125rem',
+                        color: 'var(--color-text-muted)'
+                    }}>
+                        🔍
+                    </span>
+                    {searchQuery && (
                         <button
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => setShowBill(true)}
-                            style={{ backgroundColor: '#fff', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
+                            onClick={() => setSearchQuery('')}
+                            style={{
+                                position: 'absolute',
+                                right: '0.875rem',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'var(--color-basil-green)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: 'var(--radius-full)',
+                                width: '28px',
+                                height: '28px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                fontWeight: '600'
+                            }}
                         >
-                            View Bill (₹{getBillTotal()})
+                            ×
                         </button>
                     )}
                 </div>
-            </header>
+                {searchQuery && (
+                    <p style={{
+                        maxWidth: '640px',
+                        margin: '0.75rem auto 0',
+                        fontSize: '0.875rem',
+                        color: 'var(--color-text-secondary)',
+                        textAlign: 'center'
+                    }}>
+                        Found {filteredItems.length} {filteredItems.length === 1 ? 'dish' : 'dishes'} matching "{searchQuery}"
+                    </p>
+                )}
+            </div>
 
             {/* Category Navigation */}
             <nav className="category-nav">
@@ -256,32 +348,53 @@ export default function MenuPage({
             {/* Veg/Non-Veg Filter */}
             <div style={{
                 display: 'flex',
-                gap: '0.5rem',
-                padding: '0.75rem 1rem',
-                backgroundColor: 'var(--color-bg)',
-                borderBottom: '1px solid var(--color-border)',
+                gap: '0.75rem',
+                padding: '1rem 1rem',
+                backgroundColor: 'var(--color-bg-primary)',
+                borderBottom: '1px solid var(--color-border-light)',
                 justifyContent: 'center',
                 flexWrap: 'wrap'
             }}>
                 <button
-                    className={`btn btn-sm ${typeFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+                    className={`btn ${typeFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setTypeFilter('all')}
-                    style={{ minWidth: '80px' }}
+                    style={{
+                        minWidth: '90px',
+                        padding: '0.625rem 1.25rem',
+                        fontSize: '0.875rem',
+                        minHeight: '40px'
+                    }}
                 >
                     All
                 </button>
                 <button
-                    className={`btn btn-sm ${typeFilter === 'veg' ? 'btn-primary' : 'btn-secondary'}`}
+                    className={`btn ${typeFilter === 'veg' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setTypeFilter('veg')}
-                    style={{ minWidth: '80px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                    style={{
+                        minWidth: '90px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.375rem',
+                        padding: '0.625rem 1.25rem',
+                        fontSize: '0.875rem',
+                        minHeight: '40px'
+                    }}
                 >
                     <span className="veg-indicator veg" style={{ width: '14px', height: '14px', margin: 0 }}></span>
                     Veg
                 </button>
                 <button
-                    className={`btn btn-sm ${typeFilter === 'non-veg' ? 'btn-primary' : 'btn-secondary'}`}
+                    className={`btn ${typeFilter === 'non-veg' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setTypeFilter('non-veg')}
-                    style={{ minWidth: '100px', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                    style={{
+                        minWidth: '110px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.375rem',
+                        padding: '0.625rem 1.25rem',
+                        fontSize: '0.875rem',
+                        minHeight: '40px'
+                    }}
                 >
                     <span className="veg-indicator non-veg" style={{ width: '14px', height: '14px', margin: 0 }}></span>
                     Non-Veg
@@ -299,25 +412,26 @@ export default function MenuPage({
 
                         return (
                             <div key={item.id} className={`menu-item ${!isAvailable ? 'unavailable' : ''}`}>
+                                {item.image_url && (
+                                    <img src={item.image_url} alt={item.name} className="menu-item-image" style={{ filter: !isAvailable ? 'grayscale(100%)' : 'none' }} />
+                                )}
                                 <div className="menu-item-info">
                                     <div className="menu-item-header">
                                         <div className={`veg-indicator ${item.type}`}></div>
-                                        <div>
-                                            <h3 style={{ textDecoration: !isAvailable ? 'line-through' : 'none', color: !isAvailable ? '#94a3b8' : 'inherit' }}>{item.name}</h3>
-                                            <div className="menu-item-price">₹{item.price}</div>
-                                        </div>
+                                        <h3 style={{ textDecoration: !isAvailable ? 'line-through' : 'none', color: !isAvailable ? '#94a3b8' : 'inherit' }}>{item.name}</h3>
                                     </div>
-                                    <div className="menu-item-actions">
+                                    <div className="menu-item-footer">
+                                        <div className="menu-item-price">₹{item.price}</div>
                                         {!isAvailable ? (
-                                            <button className="btn btn-secondary btn-sm" disabled style={{ opacity: 0.6, cursor: 'not-allowed' }}>
-                                                Sold Out
+                                            <button className="btn-add" disabled style={{ opacity: 0.4, cursor: 'not-allowed' }}>
+                                                +
                                             </button>
                                         ) : !cartItem ? (
                                             <button
-                                                className="btn btn-primary btn-sm"
+                                                className="btn-add"
                                                 onClick={() => addToCart(item)}
                                             >
-                                                Add
+                                                +
                                             </button>
                                         ) : (
                                             <div className="quantity-controls">
@@ -338,9 +452,6 @@ export default function MenuPage({
                                         )}
                                     </div>
                                 </div>
-                                {item.image_url && (
-                                    <img src={item.image_url} alt={item.name} className="menu-item-image" style={{ filter: !isAvailable ? 'grayscale(100%)' : 'none' }} />
-                                )}
                             </div>
                         );
                     })
@@ -499,6 +610,6 @@ export default function MenuPage({
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 }

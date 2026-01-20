@@ -37,11 +37,11 @@ export default function DashboardSidebar() {
                 <div className="sidebar-logo">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h1>Dashboard</h1>
-                        {/* Close button for mobile inside sidebar */}
+                        {/* Close button */}
                         <button
-                            className="mobile-menu-toggle"
-                            style={{ position: 'static', display: 'block', border: 'none', boxShadow: 'none' }}
+                            className="sidebar-close"
                             onClick={() => setIsOpen(false)}
+                            aria-label="Close Menu"
                         >
                             ✕
                         </button>
@@ -69,7 +69,7 @@ export default function DashboardSidebar() {
                                     border: 'none',
                                     padding: 'var(--spacing-md) var(--spacing-lg)',
                                     cursor: 'pointer',
-                                    color: 'var(--color-text)',
+                                    color: 'var(--color-text-secondary)',
                                     fontSize: 'inherit',
                                     fontFamily: 'inherit'
                                 }}>

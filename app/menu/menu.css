@@ -1,0 +1,31 @@
+/* ========================================
+   BASIL CAFE - CUSTOMER MENU ONLY
+   Modern • Fresh • Youthful
+   ======================================== */
+
+/* This CSS only applies to the customer menu pages */
+
+/* Realistic Basil Leaf Background Pattern - Menu Only */
+.menu-page {
+    position: relative;
+}
+
+.menu-page::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='1600' height='1600' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cstyle%3E.leaf%7Bfill:%232D7A4F;opacity:0.035%7D.vein%7Bfill:none;stroke:%231F5438;stroke-width:1.5;opacity:0.025%7D%3C/style%3E%3C/defs%3E%3C!-- Realistic basil leaves with veins --%3E%3Cg transform='translate(200,150) rotate(-15)'%3E%3Cellipse class='leaf' cx='0' cy='0' rx='80' ry='120'/%3E%3Cpath class='vein' d='M0,-120 L0,120 M-40,-60 Q-20,-50 0,0 M40,-60 Q20,-50 0,0 M-50,20 Q-25,15 0,0 M50,20 Q25,15 0,0 M-45,60 Q-22,50 0,0 M45,60 Q22,50 0,0'/%3E%3C/g%3E%3Cg transform='translate(900,300) rotate(25)'%3E%3Cellipse class='leaf' cx='0' cy='0' rx='90' ry='130'/%3E%3Cpath class='vein' d='M0,-130 L0,130 M-45,-70 Q-22,-55 0,0 M45,-70 Q22,-55 0,0 M-55,25 Q-27,18 0,0 M55,25 Q27,18 0,0 M-50,70 Q-25,55 0,0 M50,70 Q25,55 0,0'/%3E%3C/g%3E%3Cg transform='translate(500,700) rotate(-30)'%3E%3Cellipse class='leaf' cx='0' cy='0' rx='75' ry='110'/%3E%3Cpath class='vein' d='M0,-110 L0,110 M-38,-55 Q-19,-45 0,0 M38,-55 Q19,-45 0,0 M-45,18 Q-22,12 0,0 M45,18 Q22,12 0,0 M-40,55 Q-20,45 0,0 M40,55 Q20,45 0,0'/%3E%3C/g%3E%3Cg transform='translate(1300,600) rotate(10)'%3E%3Cellipse class='leaf' cx='0' cy='0' rx='85' ry='125'/%3E%3Cpath class='vein' d='M0,-125 L0,125 M-42,-65 Q-21,-52 0,0 M42,-65 Q21,-52 0,0 M-52,22 Q-26,16 0,0 M52,22 Q26,16 0,0 M-48,65 Q-24,52 0,0 M48,65 Q24,52 0,0'/%3E%3C/g%3E%3Cg transform='translate(150,1000) rotate(40)'%3E%3Cellipse class='leaf' cx='0' cy='0' rx='70' ry='105'/%3E%3Cpath class='vein' d='M0,-105 L0,105 M-35,-52 Q-17,-42 0,0 M35,-52 Q17,-42 0,0 M-42,16 Q-21,11 0,0 M42,16 Q21,11 0,0 M-38,52 Q-19,42 0,0 M38,52 Q19,42 0,0'/%3E%3C/g%3E%3Cg transform='translate(750,1100) rotate(-20)'%3E%3Cellipse class='leaf' cx='0' cy='0' rx='88' ry='128'/%3E%3Cpath class='vein' d='M0,-128 L0,128 M-44,-68 Q-22,-54 0,0 M44,-68 Q22,-54 0,0 M-54,24 Q-27,17 0,0 M54,24 Q27,17 0,0 M-50,68 Q-25,54 0,0 M50,68 Q25,54 0,0'/%3E%3C/g%3E%3Cg transform='translate(1400,1200) rotate(5)'%3E%3Cellipse class='leaf' cx='0' cy='0' rx='78' ry='115'/%3E%3Cpath class='vein' d='M0,-115 L0,115 M-39,-58 Q-19,-47 0,0 M39,-58 Q19,-47 0,0 M-47,20 Q-23,14 0,0 M47,20 Q23,14 0,0 M-43,58 Q-21,47 0,0 M43,58 Q21,47 0,0'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 1600px 1600px;
+    background-position: center;
+    background-repeat: repeat;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.menu-page>* {
+    position: relative;
+    z-index: 1;
+}
