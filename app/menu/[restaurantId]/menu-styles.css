@@ -71,8 +71,21 @@
 
 /* Category Navigation */
 .menu-page-wrapper .category-nav {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding: 1rem 1.5rem;
     background: #FFFFFF;
     border-bottom: 1px solid #F0F0F0;
+    scrollbar-width: none;
+    /* Hide scrollbar Firefox */
+    -ms-overflow-style: none;
+    /* Hide scrollbar IE/Edge */
+}
+
+.menu-page-wrapper .category-nav::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar Chrome/Safari */
 }
 
 .menu-page-wrapper .category-tab {
