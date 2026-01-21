@@ -211,12 +211,16 @@ export default function OrderHistoryPage() {
                                         Table {order.tableNumber}
                                     </td>
                                     <td style={{ padding: 'var(--spacing-md)' }}>
-                                        <div style={{ fontSize: 'var(--font-size-sm)' }}>
-                                            {order.items.map((item, idx) => (
-                                                <div key={idx}>
-                                                    {item.name} ×{item.quantity}
-                                                </div>
-                                            ))}
+                                        <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+                                            {order.items && order.items.length > 0 ? (
+                                                order.items.map((item, idx) => (
+                                                    <div key={idx}>
+                                                        {item.name} <span style={{ opacity: 0.7 }}>×{item.quantity}</span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No items recorded</span>
+                                            )}
                                         </div>
                                     </td>
                                     <td style={{ padding: 'var(--spacing-md)' }}>

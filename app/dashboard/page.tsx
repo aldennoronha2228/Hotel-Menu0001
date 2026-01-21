@@ -18,8 +18,11 @@ export default function DashboardPage() {
         const savedCount = localStorage.getItem('tableCount');
         if (savedCount) {
             const count = parseInt(savedCount);
-            if (!isNaN(count)) {
+            if (!isNaN(count) && count > 0) {
                 setTables(Array.from({ length: count }, (_, i) => i + 1));
+            } else {
+                // Fallback if saved count is invalid (e.g. 0)
+                setTables(Array.from({ length: 15 }, (_, i) => i + 1));
             }
         }
     }, []);
@@ -201,45 +204,57 @@ export default function DashboardPage() {
             )}
 
             {/* Mini Map Section */}
-            <div style={{
-                marginBottom: '1.5rem',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                backgroundColor: 'white'
-            }}>
-                <div
-                    onClick={() => setShowMap(!showMap)}
-                    style={{
-                        padding: '0.75rem 1rem',
-                        borderBottom: showMap ? '1px solid #f1f5f9' : 'none',
-                        fontSize: '0.9rem',
-                        fontWeight: 600,
-                        color: '#64748b',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        userSelect: 'none'
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span>{showMap ? '▼' : '▶'}</span>
-                        <span>Restaurant Overview (Read-Only)</span>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    backgroundColor: 'white'
+                }}>
+                    {/* Compact Header Bar */}
+                    <div
+                        onClick={() => setShowMap(!showMap)}
+                        style={{
+                            padding: '0.35rem 0.75rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: '#64748b',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            cursor: 'pointer',
+                            userSelect: 'none',
+                            backgroundColor: '#f1f5f9',
+                            borderBottom: showMap ? '1px solid #e2e8f0' : 'none',
+                            whiteSpace: 'nowrap'
+                        }}
+                    >
+                        <span style={{ fontSize: '0.7rem' }}>{showMap ? '▼' : '▶'}</span>
+                        <span>Restaurant Overview</span>
+                        {showMap && <span style={{ fontSize: '0.65rem', fontWeight: 400, marginLeft: 'auto', color: '#94a3b8' }}>Click table to filter</span>}
                     </div>
-                    {showMap && <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>Click table to filter</span>}
-                </div>
 
-                {showMap && (
-                    <FloorPlan
-                        tables={tables}
-                        activeTables={activeTableNumbers}
-                        onTableClick={(id) => setSelectedTable(prev => prev === id ? null : id)}
-                        readOnly={true}
-                        scale={0.5}
-                        height={300}
-                    />
-                )}
+                    {/* Map Area */}
+                    {showMap && (
+                        <div style={{
+                            width: '100%',
+                            overflowX: 'auto',
+                            backgroundColor: 'white',
+                            padding: '1rem',
+                            display: 'flex',
+                            justifyContent: 'center'
+                        }}>
+                            <FloorPlan
+                                tables={tables}
+                                activeTables={activeTableNumbers}
+                                onTableClick={(id) => setSelectedTable(prev => prev === id ? null : id)}
+                                readOnly={true}
+                                scale={0.55}
+                                height={280}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="orders-grid" style={{

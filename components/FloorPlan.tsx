@@ -31,7 +31,19 @@ export default function FloorPlan({
     positions: controlledPositions,
     onPositionsChange
 }: FloorPlanProps) {
-    const [internalPositions, setInternalPositions] = useState<TablePosition[]>([]);
+    // Initialize with default positions immediately to prevent empty array
+    const getDefaultPositions = (tableIds: number[]): TablePosition[] => {
+        return tableIds.map((id, index) => ({
+            id,
+            x: (index % 5) * 130 + 20,
+            y: Math.floor(index / 5) * 130 + 20
+        }));
+    };
+
+    const [internalPositions, setInternalPositions] = useState<TablePosition[]>(() => {
+        // Initialize with default positions immediately
+        return getDefaultPositions(tables);
+    });
     const [isDragging, setIsDragging] = useState<number | null>(null);
     const dragOffset = useRef({ x: 0, y: 0 });
     const [mounted, setMounted] = useState(false);
@@ -48,14 +60,15 @@ export default function FloorPlan({
         let initialPos: TablePosition[] = [];
 
         if (savedLayout) {
-            initialPos = JSON.parse(savedLayout);
+            try {
+                initialPos = JSON.parse(savedLayout);
+            } catch (e) {
+                console.error('Failed to parse saved table layout:', e);
+                initialPos = getDefaultPositions(tables);
+            }
         } else {
-            // Default grid layout
-            initialPos = tables.map((id, index) => ({
-                id,
-                x: (index % 5) * 120 + 20,
-                y: Math.floor(index / 5) * 120 + 20
-            }));
+            // Use default grid layout
+            initialPos = getDefaultPositions(tables);
         }
 
         // Sync with tables prop (Remove invalid, Add missing)
@@ -67,13 +80,16 @@ export default function FloorPlan({
         if (missing.length > 0) {
             const added = missing.map((id, index) => ({
                 id,
-                x: ((id - 1) % 5) * 120 + 20,
-                y: Math.floor((id - 1) / 5) * 120 + 20
+                x: ((id - 1) % 5) * 130 + 20,
+                y: Math.floor((id - 1) / 5) * 130 + 20
             }));
             mergedPos = [...mergedPos, ...added];
         }
 
-        setInternalPositions(mergedPos);
+        // Only update if positions actually changed
+        if (JSON.stringify(mergedPos) !== JSON.stringify(internalPositions)) {
+            setInternalPositions(mergedPos);
+        }
 
     }, [tables, isControlled]);
 
@@ -125,9 +141,7 @@ export default function FloorPlan({
             style={{
                 position: 'relative',
                 height: typeof height === 'number' ? `${height}px` : height,
-                backgroundColor: '#f8fafc',
-                border: '2px dashed #cbd5e1',
-                borderRadius: '12px',
+                backgroundColor: 'white',
                 overflow: 'hidden',
                 userSelect: 'none',
                 cursor: readOnly ? 'default' : 'grab'
@@ -136,7 +150,25 @@ export default function FloorPlan({
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
         >
-            <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: '100%', height: '100%' }}>
+            <div style={{
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+                minWidth: '700px',
+                minHeight: '450px',
+                position: 'relative'
+            }}>
+                {positions.length === 0 && (
+                    <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        color: '#64748b',
+                        fontSize: '1rem'
+                    }}>
+                        No tables configured
+                    </div>
+                )}
                 {positions.map(pos => {
                     const isActive = activeTables.includes(pos.id);
                     return (
@@ -148,8 +180,8 @@ export default function FloorPlan({
                                 position: 'absolute',
                                 left: pos.x,
                                 top: pos.y,
-                                width: '80px',
-                                height: '80px',
+                                width: '90px',
+                                height: '90px',
                                 borderRadius: '50%',
                                 backgroundColor: isActive ? '#fef08a' : 'white',
                                 border: `3px solid ${isActive ? '#eab308' : '#e2e8f0'}`,
@@ -164,8 +196,8 @@ export default function FloorPlan({
                             }}
                             title={isActive ? 'Active Order' : 'Empty Table'}
                         >
-                            <span style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#334155' }}>{pos.id}</span>
-                            {isActive && <span style={{ fontSize: '0.6rem', color: '#854d0e', fontWeight: 600 }}>BUSY</span>}
+                            <span style={{ fontWeight: 'bold', fontSize: '1.3rem', color: '#334155' }}>{pos.id}</span>
+                            {isActive && <span style={{ fontSize: '0.65rem', color: '#854d0e', fontWeight: 600 }}>BUSY</span>}
                         </div>
                     );
                 })}
