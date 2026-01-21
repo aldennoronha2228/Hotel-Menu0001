@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MenuItem, Category } from '@/lib/types';
+import './dashboard-menu.css';
 
 export default function MenuManagementPage() {
     const [menuItems, setMenuItems] = useState<any[]>([]); // Using any for joined data flexibility
