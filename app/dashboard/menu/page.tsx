@@ -20,6 +20,12 @@ export default function MenuManagementPage() {
         type: 'veg' as 'veg' | 'non-veg',
     });
 
+    // Category Management State
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+    const [editingCategoryName, setEditingCategoryName] = useState('');
+
     // Fetch Data
     useEffect(() => {
         fetchData();
@@ -156,6 +162,79 @@ export default function MenuManagementPage() {
         }
     };
 
+    // --- Category Management Handlers ---
+
+    const handleAddCategory = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const res = await fetch('/api/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newCategoryName, display_order: categories.length })
+            });
+            if (res.ok) {
+                const newCat = await res.json();
+                setCategories([...categories, newCat]);
+                setNewCategoryName('');
+                if (!selectedCategory) setSelectedCategory(newCat.id);
+            } else {
+                alert('Failed to add category');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error adding category');
+        }
+    };
+
+    const handleUpdateCategory = async (id: string) => {
+        if (!editingCategoryName.trim()) return;
+        try {
+            const res = await fetch(`/api/categories/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: editingCategoryName })
+            });
+            if (res.ok) {
+                const updated = await res.json();
+                setCategories(categories.map(c => c.id === id ? updated : c));
+                setEditingCategoryId(null);
+                setEditingCategoryName('');
+            } else {
+                alert('Failed to update category');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error updating category');
+        }
+    };
+
+    const handleDeleteCategory = async (id: string, name: string) => {
+        // Check if category has items
+        const hasItems = menuItems.some(i => i.category_id === id);
+        if (hasItems) {
+            alert('Cannot delete category because it contains items. Please move or delete items first.');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+
+        try {
+            const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                const newCats = categories.filter(c => c.id !== id);
+                setCategories(newCats);
+                if (selectedCategory === id) {
+                    setSelectedCategory(newCats[0]?.id || '');
+                }
+            } else {
+                alert('Failed to delete category');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error deleting category');
+        }
+    };
+
     if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading menu...</div>;
 
     return (
@@ -166,9 +245,14 @@ export default function MenuManagementPage() {
                         <h1>Menu Management</h1>
                         <p className="text-secondary">{menuItems.length} items total</p>
                     </div>
-                    <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                        Add Item
-                    </button>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <button className="btn btn-secondary" onClick={() => setShowCategoryModal(true)}>
+                            Manage Categories
+                        </button>
+                        <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+                            Add Item
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -353,6 +437,99 @@ export default function MenuManagementPage() {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Manage Categories Modal */}
+            {showCategoryModal && (
+                <>
+                    <div className="modal-overlay active" onClick={() => setShowCategoryModal(false)}></div>
+                    <div className="modal active">
+                        <div className="modal-header">
+                            <h2>Manage Categories</h2>
+                            <button className="btn-icon btn-secondary" onClick={() => setShowCategoryModal(false)}>✕</button>
+                        </div>
+                        <div className="modal-content">
+                            {/* Add Category Form */}
+                            <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="New Category Name"
+                                    required
+                                    value={newCategoryName}
+                                    onChange={(e) => setNewCategoryName(e.target.value)}
+                                    style={{ flex: 1 }}
+                                />
+                                <button type="submit" className="btn btn-primary">Add</button>
+                            </form>
+
+                            {/* Categories List */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {categories.map(cat => (
+                                    <div key={cat.id} style={{
+                                        padding: '0.75rem',
+                                        backgroundColor: '#f8fafc',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '6px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between'
+                                    }}>
+                                        {editingCategoryId === cat.id ? (
+                                            <div style={{ display: 'flex', gap: '0.5rem', flex: 1, marginRight: '1rem' }}>
+                                                <input
+                                                    type="text"
+                                                    className="form-input"
+                                                    value={editingCategoryName}
+                                                    onChange={(e) => setEditingCategoryName(e.target.value)}
+                                                    style={{ padding: '0.25rem 0.5rem', height: '32px' }}
+                                                />
+                                                <button
+                                                    className="btn btn-primary btn-sm"
+                                                    onClick={() => handleUpdateCategory(cat.id)}
+                                                >
+                                                    Save
+                                                </button>
+                                                <button
+                                                    className="btn btn-secondary btn-sm"
+                                                    onClick={() => setEditingCategoryId(null)}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <span style={{ fontWeight: 500 }}>{cat.name}</span>
+                                        )}
+
+                                        {editingCategoryId !== cat.id && (
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button
+                                                    className="btn btn-secondary btn-sm"
+                                                    onClick={() => {
+                                                        setEditingCategoryId(cat.id);
+                                                        setEditingCategoryName(cat.name);
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="btn btn-sm"
+                                                    style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                                                    onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                {categories.length === 0 && (
+                                    <p className="text-secondary text-center">No categories yet</p>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </>
