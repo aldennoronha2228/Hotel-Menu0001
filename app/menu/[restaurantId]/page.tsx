@@ -336,6 +336,11 @@ export default function MenuPage({
 
             {/* Category Navigation */}
             <nav className="category-nav">
+                {categories.length === 0 && (
+                    <div style={{ color: 'red', fontSize: '12px', padding: '10px' }}>
+                        DEBUG: No categories. Loading: {loading.toString()}
+                    </div>
+                )}
                 {categories.map(category => (
                     <button
                         key={category.id}
