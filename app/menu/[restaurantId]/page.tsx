@@ -36,8 +36,9 @@ export default function MenuPage({
     const [userId, setUserId] = useState<string>('');
 
     // Initialize user ID from localStorage or generate new one
+    // Use a device-specific key, not table-specific, so each customer has their own unique ID
     useEffect(() => {
-        const storageKey = `userId_table_${tableNumber}`;
+        const storageKey = 'menuUserId'; // Device-specific, not table-specific
         let storedUserId = localStorage.getItem(storageKey);
 
         if (!storedUserId) {
@@ -47,7 +48,7 @@ export default function MenuPage({
         }
 
         setUserId(storedUserId);
-    }, [tableNumber]);
+    }, []); // Remove tableNumber dependency
 
     // Fetch Menu Data
     useEffect(() => {
