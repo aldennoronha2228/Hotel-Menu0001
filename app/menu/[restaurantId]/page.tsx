@@ -2,7 +2,8 @@
 
 import { use, useState, useEffect } from 'react';
 import { CartItem } from '@/lib/types';
-import { mockRestaurant, mockCategories, getMenuItemsByCategory, getMenuItemById } from '@/lib/mockData';
+import { mockRestaurant } from '@/lib/mockData';
+import './menu-styles.css';
 
 export default function MenuPage({
     params,
