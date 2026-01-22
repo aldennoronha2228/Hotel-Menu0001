@@ -348,7 +348,18 @@ export default function MenuPage({
             </div>
 
             {/* Category Navigation */}
-            <nav className="category-nav">
+            <nav className="category-nav" style={{
+                display: 'flex',
+                gap: '10px',
+                overflowX: 'auto',
+                padding: '15px',
+                background: '#ffe4e6',
+                border: '4px solid #f43f5e',
+                minHeight: '80px',
+                marginBottom: '20px',
+                zIndex: 9999,
+                position: 'relative'
+            }}>
                 {categories.length === 0 && (
                     <div style={{ padding: '1rem', color: '#e53e3e', fontSize: '0.875rem', textAlign: 'center', width: '100%' }}>
                         ⚠️ Categories hidden by database permissions. <br />
@@ -358,10 +369,23 @@ export default function MenuPage({
                 {categories.map(category => (
                     <button
                         key={category.id}
-                        className={`category-tab ${currentCategory === category.id ? 'active' : ''}`}
                         onClick={() => setCurrentCategory(category.id)}
+                        style={{
+                            padding: '12px 24px',
+                            backgroundColor: currentCategory === category.id ? '#10b981' : '#374151',
+                            color: 'white',
+                            border: '2px solid white',
+                            borderRadius: '30px',
+                            whiteSpace: 'nowrap',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            flexShrink: 0,
+                            marginRight: '10px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                        }}
                     >
-                        {category.name}
+                        {category.name || `Cat ${category.id}`}
                     </button>
                 ))}
             </nav>
