@@ -142,10 +142,10 @@ export default function FloorPlan({
                 position: 'relative',
                 height: typeof height === 'number' ? `${height}px` : height,
                 backgroundColor: 'white',
-                overflow: readOnly ? 'auto' : 'hidden',
+                overflow: 'auto',
                 userSelect: 'none',
                 cursor: readOnly ? 'default' : 'grab',
-                touchAction: readOnly ? 'pan-x pan-y' : 'none'
+                touchAction: readOnly ? 'pan-x pan-y' : 'pan-x pan-y'
             }}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
