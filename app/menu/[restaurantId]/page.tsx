@@ -634,28 +634,32 @@ export default function MenuPage({
                                 {userOrders.length === 0 ? (
                                     <p className="text-center text-secondary">You haven't placed any orders yet</p>
                                 ) : (
-                                    userOrders.map(order => (
-                                        <div key={order.id} className="order-summary-card" style={{
-                                            border: '1px solid #eee', padding: '1rem', marginBottom: '1rem', borderRadius: '8px'
-                                        }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                <span className={`status-badge ${order.status}`}>{order.status.toUpperCase()}</span>
-                                                <span style={{ fontSize: '0.9rem', color: '#666', fontWeight: 600 }}>
-                                                    {order.dailyOrderNumber ? `Order #${order.dailyOrderNumber}` : `Order #${order.id.slice(0, 4)}`}
-                                                </span>
-                                            </div>
-                                            {order.items.map((img: any, idx: number) => (
-                                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', marginBottom: '0.2rem' }}>
-                                                    <span>{img.name} x{img.quantity}</span>
-                                                    <span>₹{img.price * img.quantity}</span>
+                                    <>
+                                        {userOrders.map(order => (
+                                            <div key={order.id} className="order-summary-card" style={{
+                                                border: '1px solid #eee', padding: '1rem', marginBottom: '1rem', borderRadius: '8px'
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                                    <span className={`status-badge ${order.status}`}>{order.status.toUpperCase()}</span>
+                                                    <span style={{ fontSize: '0.9rem', color: '#666', fontWeight: 600 }}>
+                                                        {order.dailyOrderNumber ? `Order #${order.dailyOrderNumber}` : `Order #${order.id.slice(0, 4)}`}
+                                                    </span>
                                                 </div>
-                                            ))}
-                                            <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #ddd', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
-                                                <span>Total</span>
-                                                <span>₹{order.total}</span>
+                                                {order.items.map((img: any, idx: number) => (
+                                                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', marginBottom: '0.2rem' }}>
+                                                        <span>{img.name} x{img.quantity}</span>
+                                                        <span>₹{img.price * img.quantity}</span>
+                                                    </div>
+                                                ))}
+                                                <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed #ddd', display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                                                    <span>Total</span>
+                                                    <span>₹{order.total}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))
+                                        ))}
+                                        {/* Force extra space at bottom for scrolling */}
+                                        <div style={{ minHeight: '150px', width: '100%' }}></div>
+                                    </>
                                 )}
                             </div>
                             <div className="modal-footer">
