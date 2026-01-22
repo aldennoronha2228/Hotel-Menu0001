@@ -243,7 +243,7 @@ export default function MenuPage({
         <div className="menu-page-wrapper">
             {/* Header */}
             <header className="header-customer">
-                <h1>{mockRestaurant.name}</h1>
+                <h1>{mockRestaurant.name} [{categories.length}]</h1>
                 <p className="table-number">Table {tableNumber}</p>
                 {userOrders.length > 0 && (
                     <button
