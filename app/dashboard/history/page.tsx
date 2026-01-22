@@ -193,6 +193,7 @@ export default function OrderHistoryPage() {
                                 backgroundColor: 'var(--color-bg-secondary)',
                                 borderBottom: '1px solid var(--color-border)'
                             }}>
+                                <th style={{ padding: 'var(--spacing-md)', textAlign: 'left' }}>Order #</th>
                                 <th style={{ padding: 'var(--spacing-md)', textAlign: 'left' }}>Time</th>
                                 <th style={{ padding: 'var(--spacing-md)', textAlign: 'left' }}>Table</th>
                                 <th style={{ padding: 'var(--spacing-md)', textAlign: 'left' }}>Items</th>
@@ -204,6 +205,9 @@ export default function OrderHistoryPage() {
                         <tbody>
                             {filteredOrders.map(order => (
                                 <tr key={order.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                    <td style={{ padding: 'var(--spacing-md)', fontWeight: 600 }}>
+                                        {order.dailyOrderNumber ? `#${order.dailyOrderNumber}` : `...${order.id.slice(0, 4)}`}
+                                    </td>
                                     <td style={{ padding: 'var(--spacing-md)' }}>
                                         {formatTime(order.timestamp)}
                                     </td>
