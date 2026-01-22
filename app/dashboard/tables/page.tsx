@@ -41,24 +41,51 @@ export default function TablesPage() {
         return () => clearInterval(interval);
     }, []);
 
-    // Load Config and Layout from local storage on mount
+    // Load Config and Layout from DATABASE (with localStorage fallback)
     useEffect(() => {
         setMounted(true);
-        const savedCount = localStorage.getItem('tableCount');
-        const initialCount = savedCount ? parseInt(savedCount) : 15;
-        setTableCount(initialCount);
 
-        const savedLayout = localStorage.getItem('tableLayout');
-        if (savedLayout) {
-            setPositions(JSON.parse(savedLayout));
-        }
+        const loadSettings = async () => {
+            try {
+                const response = await fetch('/api/settings');
+                if (response.ok) {
+                    const data = await response.json();
+                    setTableCount(data.table_count || 15);
+                    if (data.table_layout) {
+                        setPositions(data.table_layout);
+                    }
+                } else {
+                    // Fallback to localStorage if API fails
+                    const savedCount = localStorage.getItem('tableCount');
+                    const initialCount = savedCount ? parseInt(savedCount) : 15;
+                    setTableCount(initialCount);
+
+                    const savedLayout = localStorage.getItem('tableLayout');
+                    if (savedLayout) {
+                        setPositions(JSON.parse(savedLayout));
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load settings from API, using localStorage:', error);
+                // Fallback to localStorage
+                const savedCount = localStorage.getItem('tableCount');
+                const initialCount = savedCount ? parseInt(savedCount) : 15;
+                setTableCount(initialCount);
+
+                const savedLayout = localStorage.getItem('tableLayout');
+                if (savedLayout) {
+                    setPositions(JSON.parse(savedLayout));
+                }
+            }
+        };
+
+        loadSettings();
     }, []);
 
     // Sync `tables` array with `tableCount`
     useEffect(() => {
         const newTables = Array.from({ length: tableCount }, (_, i) => i + 1);
         setTables(newTables);
-        localStorage.setItem('tableCount', tableCount.toString());
     }, [tableCount]);
 
     // Sync Positions when Tables change (Add new, Remove old)
@@ -107,12 +134,31 @@ export default function TablesPage() {
 
     }, [tables]);
 
-    // Save layout whenever positions change
+    // Save layout to DATABASE (and localStorage as backup)
     useEffect(() => {
         if (positions.length > 0) {
+            // Save to database
+            const saveSettings = async () => {
+                try {
+                    await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            table_count: tableCount,
+                            table_layout: positions
+                        })
+                    });
+                } catch (error) {
+                    console.error('Failed to save settings to database:', error);
+                }
+            };
+
+            saveSettings();
+            // Also save to localStorage as backup
             localStorage.setItem('tableLayout', JSON.stringify(positions));
+            localStorage.setItem('tableCount', tableCount.toString());
         }
-    }, [positions]);
+    }, [positions, tableCount]);
 
     const handleDownloadQR = (tableNumber: number) => {
         const qrDataUrl = qrCodes[tableNumber];

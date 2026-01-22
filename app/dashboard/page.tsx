@@ -13,18 +13,42 @@ export default function DashboardPage() {
     const [error, setError] = useState<string | null>(null);
     const [tables, setTables] = useState<number[]>(Array.from({ length: 15 }, (_, i) => i + 1));
 
-    // Load table count from local storage
+    // Load table count from DATABASE (with localStorage fallback)
     useEffect(() => {
-        const savedCount = localStorage.getItem('tableCount');
-        if (savedCount) {
-            const count = parseInt(savedCount);
-            if (!isNaN(count) && count > 0) {
-                setTables(Array.from({ length: count }, (_, i) => i + 1));
-            } else {
-                // Fallback if saved count is invalid (e.g. 0)
-                setTables(Array.from({ length: 15 }, (_, i) => i + 1));
+        const loadTableCount = async () => {
+            try {
+                const response = await fetch('/api/settings');
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.table_count || 15;
+                    setTables(Array.from({ length: count }, (_, i) => i + 1));
+                } else {
+                    // Fallback to localStorage
+                    const savedCount = localStorage.getItem('tableCount');
+                    if (savedCount) {
+                        const count = parseInt(savedCount);
+                        if (!isNaN(count) && count > 0) {
+                            setTables(Array.from({ length: count }, (_, i) => i + 1));
+                        } else {
+                            setTables(Array.from({ length: 15 }, (_, i) => i + 1));
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load table count, using localStorage:', error);
+                const savedCount = localStorage.getItem('tableCount');
+                if (savedCount) {
+                    const count = parseInt(savedCount);
+                    if (!isNaN(count) && count > 0) {
+                        setTables(Array.from({ length: count }, (_, i) => i + 1));
+                    } else {
+                        setTables(Array.from({ length: 15 }, (_, i) => i + 1));
+                    }
+                }
             }
-        }
+        };
+
+        loadTableCount();
     }, []);
 
     // Fetch orders from API
