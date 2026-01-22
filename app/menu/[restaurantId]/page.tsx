@@ -673,15 +673,25 @@ export default function MenuPage({
                             <div className="success-icon">✓</div>
                             <h2>Order Sent to Kitchen</h2>
                             <p>Please pay at the counter after dining</p>
-                            <button
-                                className="btn btn-primary"
-                                onClick={() => {
-                                    setShowConfirmation(false);
-                                    setShowBill(true); // Show Status/Bill immediately after ordering
-                                }}
-                            >
-                                View Order Status
-                            </button>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => setShowConfirmation(false)}
+                                    style={{ width: '100%' }}
+                                >
+                                    Back to Menu
+                                </button>
+                                <button
+                                    className="btn btn-secondary"
+                                    onClick={() => {
+                                        setShowConfirmation(false);
+                                        setShowBill(true);
+                                    }}
+                                    style={{ width: '100%' }}
+                                >
+                                    View Order Status
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
