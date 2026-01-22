@@ -235,6 +235,7 @@ export default function TablesPage() {
                         readOnly={false}
                         positions={positions}
                         onPositionsChange={setPositions}
+                        scale={typeof window !== 'undefined' && window.innerWidth < 768 ? 0.5 : 1}
                     />
                 </div>
             ) : (

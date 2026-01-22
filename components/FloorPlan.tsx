@@ -100,22 +100,27 @@ export default function FloorPlan({
         }
     }, [positions, readOnly, isControlled]);
 
-    const handleDragStart = (e: React.MouseEvent, tableId: number) => {
+    const handleDragStart = (e: React.MouseEvent | React.TouchEvent, tableId: number) => {
         if (readOnly) return;
         const pos = positions.find(p => p.id === tableId);
         if (pos) {
             setIsDragging(tableId);
+            const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+            const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
             dragOffset.current = {
-                x: e.clientX - pos.x,
-                y: e.clientY - pos.y
+                x: clientX - pos.x * scale,
+                y: clientY - pos.y * scale
             };
         }
     };
 
-    const handleMouseMove = (e: React.MouseEvent) => {
+    const handleMouseMove = (e: React.MouseEvent | React.TouchEvent) => {
         if (isDragging !== null && !readOnly) {
-            const newX = e.clientX - dragOffset.current.x;
-            const newY = e.clientY - dragOffset.current.y;
+            const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+            const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+            const newX = (clientX - dragOffset.current.x) / scale;
+            const newY = (clientY - dragOffset.current.y) / scale;
 
             const updatedPositions = positions.map(p =>
                 p.id === isDragging ? { ...p, x: newX, y: newY } : p
@@ -150,6 +155,8 @@ export default function FloorPlan({
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
+            onTouchMove={handleMouseMove}
+            onTouchEnd={handleMouseUp}
         >
             <div style={{
                 transform: `scale(${scale})`,
@@ -176,6 +183,7 @@ export default function FloorPlan({
                         <div
                             key={pos.id}
                             onMouseDown={(e) => handleDragStart(e, pos.id)}
+                            onTouchStart={(e) => handleDragStart(e, pos.id)}
                             onClick={() => onTableClick && onTableClick(pos.id)}
                             style={{
                                 position: 'absolute',
