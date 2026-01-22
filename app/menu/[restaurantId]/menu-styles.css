@@ -258,7 +258,8 @@
 
     .menu-page-wrapper .modal-wrapper {
         max-width: 100%;
-        max-height: 85vh;
+        max-height: 85dvh;
+        /* Dynamic Viewport Height for better mobile support */
         height: auto;
         border-radius: 16px 16px 0 0;
         width: 100%;
@@ -273,6 +274,8 @@
     background: white;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    touch-action: pan-y;
+    /* Explicitly allow vertical scrolling */
 }
 
 .menu-page-wrapper .modal-header {
