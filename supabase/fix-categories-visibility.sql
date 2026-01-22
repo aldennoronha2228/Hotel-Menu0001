@@ -1,4 +1,4 @@
--- FIX: Allow public read access to categories
+npm-- FIX: Allow public read access to categories
 -- This is necessary because the public API key is restricted by RLS by default.
 
 -- 1. Enable RLS (if not already enabled)

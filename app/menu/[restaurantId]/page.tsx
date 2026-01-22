@@ -61,8 +61,21 @@ export default function MenuPage({
                 ]);
 
                 if (catRes.ok && itemRes.ok) {
-                    const cats = await catRes.json();
+                    let cats = await catRes.json();
                     const items = await itemRes.json();
+
+                    // Fallback: If categories API returns empty (e.g. RLS issue), extract from items
+                    if ((!cats || cats.length === 0) && items.length > 0) {
+                        const uniqueCats = new Map();
+                        items.forEach((item: any) => {
+                            if (item.categories) {
+                                uniqueCats.set(item.categories.id, item.categories);
+                            }
+                        });
+                        cats = Array.from(uniqueCats.values())
+                            .sort((a: any, b: any) => a.name.localeCompare(b.name));
+                    }
+
                     setCategories(cats);
                     setMenuItems(items);
                     if (cats.length > 0) setCurrentCategory(cats[0].id);
