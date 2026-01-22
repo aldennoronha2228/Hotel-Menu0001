@@ -267,7 +267,8 @@
 }
 
 .menu-page-wrapper .modal-content {
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 5rem 1.5rem;
+    /* Extra bottom padding to ensure last item is visible */
     overflow-y: auto;
     flex: 1;
     min-height: 0;
