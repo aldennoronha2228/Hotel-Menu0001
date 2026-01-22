@@ -346,3 +346,61 @@
 .menu-page-wrapper .btn-icon:hover {
     color: #1f2937;
 }
+
+/* Floating Cart Bar */
+.menu-page-wrapper .floating-cart-bar {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 500px;
+    background: #2D7A4F;
+    color: white;
+    padding: 1rem;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(45, 122, 79, 0.3);
+    z-index: 900;
+    cursor: pointer;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translate(-50%, 100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+.menu-page-wrapper .floating-cart-bar .cart-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-page-wrapper .floating-cart-bar .cart-count {
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.menu-page-wrapper .floating-cart-bar .cart-total {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.menu-page-wrapper .floating-cart-bar .view-cart-btn {
+    background: white;
+    color: #2D7A4F;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+}

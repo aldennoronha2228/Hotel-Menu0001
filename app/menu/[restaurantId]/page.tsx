@@ -705,6 +705,17 @@ export default function MenuPage({
                     </div>
                 </div>
             )}
+
+            {/* Floating Cart Bar (Only show if cart has items and cart modal is closed) */}
+            {cart.length > 0 && !showCart && !showConfirmation && (
+                <div className="floating-cart-bar" onClick={() => setShowCart(true)}>
+                    <div className="cart-info">
+                        <span className="cart-count">{getTotalItems()} ITEMS</span>
+                        <span className="cart-total">₹{getTotalPrice()}</span>
+                    </div>
+                    <button className="view-cart-btn">View Cart</button>
+                </div>
+            )}
         </div>
     );
 }
