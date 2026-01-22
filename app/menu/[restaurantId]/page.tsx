@@ -258,7 +258,7 @@ export default function MenuPage({
                             minHeight: '40px'
                         }}
                     >
-                        View Bill (₹{getBillTotal()})
+                        View Orders
                     </button>
                 )}
             </header>
@@ -660,10 +660,6 @@ export default function MenuPage({
                             </div>
                             <div className="modal-footer">
                                 <div className="modal-footer-content">
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 800, marginBottom: '1rem' }}>
-                                        <span>Grand Total</span>
-                                        <span>₹{getBillTotal()}</span>
-                                    </div>
                                     <button className="btn btn-secondary" onClick={() => setShowBill(false)} style={{ width: '100%' }}>
                                         Close
                                     </button>
