@@ -1,5 +1,6 @@
 import DashboardSidebar from '@/components/DashboardSidebar';
 import { currentUser } from '@clerk/nextjs/server';
+import { isOwner } from '@/lib/auth';
 
 export default async function DashboardLayout({
     children,
@@ -7,12 +8,11 @@ export default async function DashboardLayout({
     children: React.ReactNode;
 }) {
     const user = await currentUser();
-    const ownerEmail = process.env.OWNER_EMAIL;
 
     // Strict Check: If logged in user is NOT the owner
     const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-    if (ownerEmail && userEmail !== ownerEmail) {
+    if (!isOwner(userEmail)) {
         return (
             <div style={{
                 height: '100vh',
