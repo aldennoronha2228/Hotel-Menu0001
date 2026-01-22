@@ -635,7 +635,9 @@ export default function MenuPage({
                                     }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                             <span className={`status-badge ${order.status}`}>{order.status.toUpperCase()}</span>
-                                            <span style={{ fontSize: '0.9rem', color: '#666' }}>Order #{order.id.slice(0, 4)}</span>
+                                            <span style={{ fontSize: '0.9rem', color: '#666', fontWeight: 600 }}>
+                                                {order.dailyOrderNumber ? `Order #${order.dailyOrderNumber}` : `Order #${order.id.slice(0, 4)}`}
+                                            </span>
                                         </div>
                                         {order.items.map((img: any, idx: number) => (
                                             <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', marginBottom: '0.2rem' }}>
