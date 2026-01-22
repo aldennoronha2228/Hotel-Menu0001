@@ -22,6 +22,7 @@ export default function MenuPage({
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [typeFilter, setTypeFilter] = useState<'all' | 'veg' | 'non-veg'>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    const [showCategories, setShowCategories] = useState(false); // New state for category toggle
 
     // Bill / Active Orders State
     const [activeOrders, setActiveOrders] = useState<any[]>([]);
@@ -347,52 +348,7 @@ export default function MenuPage({
                 )}
             </div>
 
-            {/* Category Navigation */}
-            {/* Category Navigation */}
-            <nav className="category-nav" style={{
-                display: 'flex',
-                gap: '12px',
-                overflowX: 'auto',
-                padding: '16px 24px',
-                background: '#ffffff',
-                borderBottom: '1px solid #e5e7eb',
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none',
-                zIndex: 40,
-                position: 'relative',
-                alignItems: 'center'
-            }}>
-                <style jsx>{`
-                    .category-nav::-webkit-scrollbar { display: none; }
-                `}</style>
-                {categories.length === 0 && (
-                    <div style={{ padding: '1rem', color: '#e53e3e', fontSize: '0.875rem', textAlign: 'center', width: '100%' }}>
-                        ⚠️ Categories unavailable. Check database permissions.
-                    </div>
-                )}
-                {categories.map(category => (
-                    <button
-                        key={category.id}
-                        onClick={() => setCurrentCategory(category.id)}
-                        style={{
-                            padding: '8px 20px',
-                            backgroundColor: currentCategory === category.id ? '#10b981' : '#f3f4f6',
-                            color: currentCategory === category.id ? 'white' : '#374151',
-                            border: 'none',
-                            borderRadius: '9999px',
-                            whiteSpace: 'nowrap',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            flexShrink: 0,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            boxShadow: currentCategory === category.id ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
-                        }}
-                    >
-                        {category.name || `Cat ${category.id}`}
-                    </button>
-                ))}
-            </nav>
+            {/* Category Navigation moved to Filter Row */}
 
             {/* Veg/Non-Veg Filter */}
             <div style={{
@@ -404,6 +360,21 @@ export default function MenuPage({
                 justifyContent: 'center',
                 flexWrap: 'wrap'
             }}>
+                <button
+                    className={`btn ${showCategories ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setShowCategories(!showCategories)}
+                    style={{
+                        padding: '0.625rem 1.25rem',
+                        fontSize: '0.875rem',
+                        minHeight: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                    }}
+                >
+                    <span>Categories</span>
+                    <span style={{ fontSize: '10px' }}>{showCategories ? '▲' : '▼'}</span>
+                </button>
                 <button
                     className={`btn ${typeFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setTypeFilter('all')}
@@ -449,6 +420,55 @@ export default function MenuPage({
                     Non-Veg
                 </button>
             </div>
+
+            {/* Collapsible Category Nav */}
+            {showCategories && (
+                <nav className="category-nav" style={{
+                    display: 'flex',
+                    gap: '12px',
+                    overflowX: 'auto',
+                    padding: '16px 24px',
+                    background: '#ffffff',
+                    borderBottom: '1px solid #e5e7eb',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    zIndex: 40,
+                    position: 'relative',
+                    alignItems: 'center',
+                    marginBottom: '20px'
+                }}>
+                    <style jsx>{`
+                        .category-nav::-webkit-scrollbar { display: none; }
+                    `}</style>
+                    {categories.length === 0 && (
+                        <div style={{ padding: '1rem', color: '#e53e3e', fontSize: '0.875rem', textAlign: 'center', width: '100%' }}>
+                            ⚠️ Categories unavailable. Check database permissions.
+                        </div>
+                    )}
+                    {categories.map(category => (
+                        <button
+                            key={category.id}
+                            onClick={() => setCurrentCategory(category.id)}
+                            style={{
+                                padding: '8px 20px',
+                                backgroundColor: currentCategory === category.id ? '#10b981' : '#f3f4f6',
+                                color: currentCategory === category.id ? 'white' : '#374151',
+                                border: 'none',
+                                borderRadius: '9999px',
+                                whiteSpace: 'nowrap',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                flexShrink: 0,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: currentCategory === category.id ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
+                            }}
+                        >
+                            {category.name || `Cat ${category.id}`}
+                        </button>
+                    ))}
+                </nav>
+            )}
 
             {/* Menu Items */}
             <div className="menu-container">
