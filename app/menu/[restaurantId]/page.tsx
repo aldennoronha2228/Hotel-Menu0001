@@ -349,6 +349,12 @@ export default function MenuPage({
 
             {/* Category Navigation */}
             <nav className="category-nav">
+                {categories.length === 0 && (
+                    <div style={{ padding: '1rem', color: '#e53e3e', fontSize: '0.875rem', textAlign: 'center', width: '100%' }}>
+                        ⚠️ Categories hidden by database permissions. <br />
+                        Please run <code>supabase/simple-fix.sql</code> in your Supabase SQL Editor.
+                    </div>
+                )}
                 {categories.map(category => (
                     <button
                         key={category.id}
