@@ -564,37 +564,41 @@ export default function MenuPage({
                                 {cart.length === 0 ? (
                                     <p className="text-center text-secondary">Your cart is empty</p>
                                 ) : (
-                                    cart.map(item => (
-                                        <div key={item.id} className="cart-item">
-                                            <div className="cart-item-header">
-                                                <h3>{item.name}</h3>
-                                                <div className="cart-item-price">₹{item.price * item.quantity}</div>
-                                            </div>
-                                            <div className="cart-item-controls">
-                                                <div className="quantity-controls">
+                                    <>
+                                        {cart.map(item => (
+                                            <div key={item.id} className="cart-item">
+                                                <div className="cart-item-header">
+                                                    <h3>{item.name}</h3>
+                                                    <div className="cart-item-price">₹{item.price * item.quantity}</div>
+                                                </div>
+                                                <div className="cart-item-controls">
+                                                    <div className="quantity-controls">
+                                                        <button
+                                                            className="quantity-btn"
+                                                            onClick={() => decreaseQuantity(item.id)}
+                                                        >
+                                                            −
+                                                        </button>
+                                                        <span className="quantity-value">{item.quantity}</span>
+                                                        <button
+                                                            className="quantity-btn"
+                                                            onClick={() => increaseQuantity(item.id)}
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
                                                     <button
-                                                        className="quantity-btn"
-                                                        onClick={() => decreaseQuantity(item.id)}
+                                                        className="remove-item"
+                                                        onClick={() => removeFromCart(item.id)}
                                                     >
-                                                        −
-                                                    </button>
-                                                    <span className="quantity-value">{item.quantity}</span>
-                                                    <button
-                                                        className="quantity-btn"
-                                                        onClick={() => increaseQuantity(item.id)}
-                                                    >
-                                                        +
+                                                        Remove
                                                     </button>
                                                 </div>
-                                                <button
-                                                    className="remove-item"
-                                                    onClick={() => removeFromCart(item.id)}
-                                                >
-                                                    Remove
-                                                </button>
                                             </div>
-                                        </div>
-                                    ))
+                                        ))}
+                                        {/* Spacer to prevent last item from being hidden behind footer */}
+                                        <div style={{ minHeight: '150px', width: '100%' }}></div>
+                                    </>
                                 )}
                             </div>
                             {cart.length > 0 && (
