@@ -91,13 +91,14 @@ export default function MenuPage({
         fetchMenuData();
     }, []);
 
-    // Fetch Active Orders for this Table
+    // Fetch Active Orders for this User (not entire table)
     useEffect(() => {
-        if (!tableNumber || tableNumber === '0') return;
+        if (!tableNumber || tableNumber === '0' || !userId) return;
 
         const fetchActiveOrders = async () => {
             try {
-                const res = await fetch(`/api/orders?table=${tableNumber}`);
+                // Fetch only THIS user's orders (not all orders from the table)
+                const res = await fetch(`/api/orders?table=${tableNumber}&userId=${userId}`);
                 if (res.ok) {
                     const data = await res.json();
                     setActiveOrders(data);
@@ -108,7 +109,7 @@ export default function MenuPage({
         fetchActiveOrders();
         const interval = setInterval(fetchActiveOrders, 10000);
         return () => clearInterval(interval);
-    }, [tableNumber]);
+    }, [tableNumber, userId]);
 
     // Set mounted state and load cart from localStorage
     useEffect(() => {
@@ -207,7 +208,7 @@ export default function MenuPage({
 
             // Fetch active orders immediately update UI
             // (The poll will catch it too, but this is faster)
-            const activeRes = await fetch(`/api/orders?table=${tableNumber}`);
+            const activeRes = await fetch(`/api/orders?table=${tableNumber}&userId=${userId}`);
             if (activeRes.ok) setActiveOrders(await activeRes.json());
 
             if (data.demo) {
