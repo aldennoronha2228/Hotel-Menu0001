@@ -553,65 +553,69 @@ export default function MenuPage({
                 <>
                     <div className="modal-overlay active" onClick={() => setShowCart(false)}></div>
                     <div className="modal active">
-                        <div className="modal-header">
-                            <h2>Your Cart</h2>
-                            <button className="btn-icon btn-secondary" onClick={() => setShowCart(false)}>
-                                ✕
-                            </button>
-                        </div>
-                        <div className="modal-content">
-                            {cart.length === 0 ? (
-                                <p className="text-center text-secondary">Your cart is empty</p>
-                            ) : (
-                                cart.map(item => (
-                                    <div key={item.id} className="cart-item">
-                                        <div className="cart-item-header">
-                                            <h3>{item.name}</h3>
-                                            <div className="cart-item-price">₹{item.price * item.quantity}</div>
-                                        </div>
-                                        <div className="cart-item-controls">
-                                            <div className="quantity-controls">
+                        <div className="modal-wrapper">
+                            <div className="modal-header">
+                                <h2>Your Order</h2>
+                                <button className="btn-icon btn-secondary" onClick={() => setShowCart(false)}>
+                                    ✕
+                                </button>
+                            </div>
+                            <div className="modal-content">
+                                {cart.length === 0 ? (
+                                    <p className="text-center text-secondary">Your cart is empty</p>
+                                ) : (
+                                    cart.map(item => (
+                                        <div key={item.id} className="cart-item">
+                                            <div className="cart-item-header">
+                                                <h3>{item.name}</h3>
+                                                <div className="cart-item-price">₹{item.price * item.quantity}</div>
+                                            </div>
+                                            <div className="cart-item-controls">
+                                                <div className="quantity-controls">
+                                                    <button
+                                                        className="quantity-btn"
+                                                        onClick={() => decreaseQuantity(item.id)}
+                                                    >
+                                                        −
+                                                    </button>
+                                                    <span className="quantity-value">{item.quantity}</span>
+                                                    <button
+                                                        className="quantity-btn"
+                                                        onClick={() => increaseQuantity(item.id)}
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
                                                 <button
-                                                    className="quantity-btn"
-                                                    onClick={() => decreaseQuantity(item.id)}
+                                                    className="remove-item"
+                                                    onClick={() => removeFromCart(item.id)}
                                                 >
-                                                    −
-                                                </button>
-                                                <span className="quantity-value">{item.quantity}</span>
-                                                <button
-                                                    className="quantity-btn"
-                                                    onClick={() => increaseQuantity(item.id)}
-                                                >
-                                                    +
+                                                    Remove
                                                 </button>
                                             </div>
-                                            <button
-                                                className="remove-item"
-                                                onClick={() => removeFromCart(item.id)}
-                                            >
-                                                Remove
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                            {cart.length > 0 && (
+                                <div className="modal-footer">
+                                    <div className="modal-footer-content">
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                            <h3>Total</h3>
+                                            <h3>₹{getTotalPrice()}</h3>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '0.75rem', flexDirection: 'column' }}>
+                                            <button className="btn btn-primary" onClick={placeOrder} style={{ width: '100%' }}>
+                                                Place Order
+                                            </button>
+                                            <button className="btn btn-secondary" onClick={() => setShowCart(false)} style={{ width: '100%' }}>
+                                                Continue Browsing
                                             </button>
                                         </div>
                                     </div>
-                                ))
+                                </div>
                             )}
                         </div>
-                        {cart.length > 0 && (
-                            <div className="modal-footer">
-                                <div className="modal-footer-content">
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                        <h3>Total</h3>
-                                        <h3>₹{getTotalPrice()}</h3>
-                                    </div>
-                                    <button className="btn btn-primary" onClick={placeOrder} style={{ width: '100%' }}>
-                                        Place Order
-                                    </button>
-                                    <button className="btn btn-secondary" onClick={() => setShowCart(false)} style={{ width: '100%' }}>
-                                        Continue Browsing
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </>
             )}
