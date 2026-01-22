@@ -353,20 +353,20 @@ export default function MenuPage({
             {/* Veg/Non-Veg Filter */}
             <div style={{
                 display: 'flex',
-                gap: '0.75rem',
-                padding: '0.5rem 1rem 0.5rem 1rem',
+                padding: '0.25rem 1rem 0 1rem',
                 backgroundColor: 'var(--color-bg-primary)',
-                borderBottom: '1px solid var(--color-border-light)',
                 justifyContent: 'center',
-                flexWrap: 'wrap'
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+                marginBottom: 0
             }}>
                 <button
                     className={`btn ${showCategories ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setShowCategories(!showCategories)}
                     style={{
-                        padding: '0.625rem 1.25rem',
+                        padding: '0.5rem 1rem',
                         fontSize: '0.875rem',
-                        minHeight: '40px',
+                        minHeight: '36px',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px'
@@ -379,10 +379,10 @@ export default function MenuPage({
                     className={`btn ${typeFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setTypeFilter('all')}
                     style={{
-                        minWidth: '90px',
-                        padding: '0.625rem 1.25rem',
+                        minWidth: '80px',
+                        padding: '0.5rem 1rem',
                         fontSize: '0.875rem',
-                        minHeight: '40px'
+                        minHeight: '36px'
                     }}
                 >
                     All
@@ -391,52 +391,53 @@ export default function MenuPage({
                     className={`btn ${typeFilter === 'veg' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setTypeFilter('veg')}
                     style={{
-                        minWidth: '90px',
+                        minWidth: '80px',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.375rem',
-                        padding: '0.625rem 1.25rem',
+                        padding: '0.5rem 1rem',
                         fontSize: '0.875rem',
-                        minHeight: '40px'
+                        minHeight: '36px'
                     }}
                 >
-                    <span className="veg-indicator veg" style={{ width: '14px', height: '14px', margin: 0 }}></span>
+                    <span className="veg-indicator veg" style={{ width: '12px', height: '12px', margin: 0 }}></span>
                     Veg
                 </button>
                 <button
                     className={`btn ${typeFilter === 'non-veg' ? 'btn-primary' : 'btn-secondary'}`}
                     onClick={() => setTypeFilter('non-veg')}
                     style={{
-                        minWidth: '110px',
+                        minWidth: '100px',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.375rem',
-                        padding: '0.625rem 1.25rem',
+                        padding: '0.5rem 1rem',
                         fontSize: '0.875rem',
-                        minHeight: '40px'
+                        minHeight: '36px'
                     }}
                 >
-                    <span className="veg-indicator non-veg" style={{ width: '14px', height: '14px', margin: 0 }}></span>
+                    <span className="veg-indicator non-veg" style={{ width: '12px', height: '12px', margin: 0 }}></span>
                     Non-Veg
                 </button>
             </div>
 
             {/* Collapsible Category Nav */}
             {showCategories && (
-                <nav className="category-nav" style={{
+                <nav style={{
                     display: 'flex',
-                    gap: '12px',
+                    gap: '8px',
                     overflowX: 'auto',
-                    padding: '4px 24px 12px 24px',
-                    background: '#f8fafc',
-                    borderBottom: '1px solid #e2e8f0',
-                    boxShadow: 'inset 0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                    padding: '0 24px 8px 24px',
+                    background: 'var(--color-bg-primary)',
+                    borderBottom: '1px solid var(--color-border-light)',
+                    boxShadow: 'none',
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none',
                     zIndex: 35,
                     position: 'relative',
                     alignItems: 'center',
-                    marginBottom: '20px',
+                    marginBottom: '0px',
+                    marginTop: '4px',
                     animation: 'slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}>
                     <style jsx>{`
@@ -477,7 +478,7 @@ export default function MenuPage({
             )}
 
             {/* Menu Items */}
-            <div className="menu-container" style={{ paddingTop: '1.5rem' }}>
+            <div className="menu-container" style={{ paddingTop: '0.5rem' }}>
                 {filteredItems.length === 0 ? (
                     <p className="text-center text-secondary">No items in this category</p>
                 ) : (
