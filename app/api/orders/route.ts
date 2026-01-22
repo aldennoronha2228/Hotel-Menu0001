@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
         // Transform data
         const formattedOrders = orders.map(order => ({
             id: order.id,
+            dailyOrderNumber: order.daily_order_number,
             restaurantId: order.restaurant_id,
             tableNumber: order.table_number,
             items: order.order_items.map((item: any) => ({
@@ -107,6 +108,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Get today's date (YYYY-MM-DD format)
+        const today = new Date().toISOString().split('T')[0];
+
+        // Count today's orders to generate sequential number
+        const { count: todayCount } = await supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .gte('created_at', `${today}T00:00:00`)
+            .lt('created_at', `${today}T23:59:59`);
+
+        const dailyOrderNumber = (todayCount || 0) + 1;
+
         // Insert order
         const { data: order, error: orderError } = await supabase
             .from('orders')
@@ -116,7 +129,9 @@ export async function POST(request: NextRequest) {
                     table_number: tableNumber,
                     total,
                     status: 'new',
-                    user_id: user_id || null // Store user_id for individual tracking
+                    user_id: user_id || null,
+                    daily_order_number: dailyOrderNumber,
+                    order_date: today
                 }
             ])
             .select()

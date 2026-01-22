@@ -305,6 +305,18 @@ export default function DashboardPage() {
                             <div className="order-header" style={{ marginBottom: '1rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        {order.dailyOrderNumber && (
+                                            <div style={{
+                                                padding: '0.25rem 0.75rem',
+                                                backgroundColor: '#3b82f6',
+                                                color: 'white',
+                                                borderRadius: '6px',
+                                                fontSize: '0.875rem',
+                                                fontWeight: 600
+                                            }}>
+                                                #{order.dailyOrderNumber}
+                                            </div>
+                                        )}
                                         <div className="table-badge" style={{
                                             padding: '0.25rem 0.75rem',
                                             backgroundColor: isPreparing ? 'var(--color-primary)' : 'var(--color-bg-secondary)',

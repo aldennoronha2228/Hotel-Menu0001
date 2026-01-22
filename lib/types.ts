@@ -26,6 +26,7 @@ export interface CartItem {
 
 export interface Order {
     id: string;
+    dailyOrderNumber?: number;
     restaurantId: string;
     tableNumber: string;
     items: CartItem[];
