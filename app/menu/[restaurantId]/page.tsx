@@ -243,7 +243,7 @@ export default function MenuPage({
         <div className="menu-page-wrapper">
             {/* Header */}
             <header className="header-customer">
-                <h1>{mockRestaurant.name} [{categories.length}]</h1>
+                <h1>{mockRestaurant.name}</h1>
                 <p className="table-number">Table {tableNumber}</p>
                 {userOrders.length > 0 && (
                     <button
@@ -348,22 +348,26 @@ export default function MenuPage({
             </div>
 
             {/* Category Navigation */}
+            {/* Category Navigation */}
             <nav className="category-nav" style={{
                 display: 'flex',
-                gap: '10px',
+                gap: '12px',
                 overflowX: 'auto',
-                padding: '15px',
-                background: '#ffe4e6',
-                border: '4px solid #f43f5e',
-                minHeight: '80px',
-                marginBottom: '20px',
-                zIndex: 9999,
-                position: 'relative'
+                padding: '16px 24px',
+                background: '#ffffff',
+                borderBottom: '1px solid #e5e7eb',
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                zIndex: 40,
+                position: 'relative',
+                alignItems: 'center'
             }}>
+                <style jsx>{`
+                    .category-nav::-webkit-scrollbar { display: none; }
+                `}</style>
                 {categories.length === 0 && (
                     <div style={{ padding: '1rem', color: '#e53e3e', fontSize: '0.875rem', textAlign: 'center', width: '100%' }}>
-                        ⚠️ Categories hidden by database permissions. <br />
-                        Please run <code>supabase/simple-fix.sql</code> in your Supabase SQL Editor.
+                        ⚠️ Categories unavailable. Check database permissions.
                     </div>
                 )}
                 {categories.map(category => (
@@ -371,18 +375,18 @@ export default function MenuPage({
                         key={category.id}
                         onClick={() => setCurrentCategory(category.id)}
                         style={{
-                            padding: '12px 24px',
-                            backgroundColor: currentCategory === category.id ? '#10b981' : '#374151',
-                            color: 'white',
-                            border: '2px solid white',
-                            borderRadius: '30px',
+                            padding: '8px 20px',
+                            backgroundColor: currentCategory === category.id ? '#10b981' : '#f3f4f6',
+                            color: currentCategory === category.id ? 'white' : '#374151',
+                            border: 'none',
+                            borderRadius: '9999px',
                             whiteSpace: 'nowrap',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            fontWeight: 600,
                             flexShrink: 0,
-                            marginRight: '10px',
                             cursor: 'pointer',
-                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                            transition: 'all 0.2s',
+                            boxShadow: currentCategory === category.id ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
                         }}
                     >
                         {category.name || `Cat ${category.id}`}
