@@ -354,7 +354,7 @@ export default function MenuPage({
             <div style={{
                 display: 'flex',
                 gap: '0.75rem',
-                padding: '0.5rem 1rem',
+                padding: '0.5rem 1rem 0.5rem 1rem',
                 backgroundColor: 'var(--color-bg-primary)',
                 borderBottom: '1px solid var(--color-border-light)',
                 justifyContent: 'center',
@@ -427,7 +427,7 @@ export default function MenuPage({
                     display: 'flex',
                     gap: '12px',
                     overflowX: 'auto',
-                    padding: '10px 24px 16px 24px',
+                    padding: '4px 24px 12px 24px',
                     background: '#f8fafc',
                     borderBottom: '1px solid #e2e8f0',
                     boxShadow: 'inset 0 4px 6px -1px rgba(0, 0, 0, 0.05)',
