@@ -270,6 +270,10 @@
     overflow-y: auto;
     flex: 1;
     background: white;
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
+    overscroll-behavior: contain;
+    /* Prevent scrolling parent page */
 }
 
 .menu-page-wrapper .modal-header {
