@@ -427,18 +427,24 @@ export default function MenuPage({
                     display: 'flex',
                     gap: '12px',
                     overflowX: 'auto',
-                    padding: '16px 24px',
-                    background: '#ffffff',
-                    borderBottom: '1px solid #e5e7eb',
+                    padding: '20px 24px',
+                    background: '#f8fafc',
+                    borderBottom: '1px solid #e2e8f0',
+                    boxShadow: 'inset 0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none',
-                    zIndex: 40,
+                    zIndex: 35,
                     position: 'relative',
                     alignItems: 'center',
-                    marginBottom: '20px'
+                    marginBottom: '20px',
+                    animation: 'slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}>
                     <style jsx>{`
                         .category-nav::-webkit-scrollbar { display: none; }
+                        @keyframes slideDown {
+                            from { opacity: 0; transform: translateY(-8px); }
+                            to { opacity: 1; transform: translateY(0); }
+                        }
                     `}</style>
                     {categories.length === 0 && (
                         <div style={{ padding: '1rem', color: '#e53e3e', fontSize: '0.875rem', textAlign: 'center', width: '100%' }}>
@@ -451,9 +457,9 @@ export default function MenuPage({
                             onClick={() => setCurrentCategory(category.id)}
                             style={{
                                 padding: '8px 20px',
-                                backgroundColor: currentCategory === category.id ? '#10b981' : '#f3f4f6',
-                                color: currentCategory === category.id ? 'white' : '#374151',
-                                border: 'none',
+                                backgroundColor: currentCategory === category.id ? '#10b981' : 'white',
+                                color: currentCategory === category.id ? 'white' : '#475569',
+                                border: currentCategory === category.id ? 'none' : '1px solid #e2e8f0',
                                 borderRadius: '9999px',
                                 whiteSpace: 'nowrap',
                                 fontSize: '14px',
@@ -461,7 +467,7 @@ export default function MenuPage({
                                 flexShrink: 0,
                                 cursor: 'pointer',
                                 transition: 'all 0.2s',
-                                boxShadow: currentCategory === category.id ? '0 2px 4px rgba(16, 185, 129, 0.2)' : 'none'
+                                boxShadow: currentCategory === category.id ? '0 4px 6px rgba(16, 185, 129, 0.25)' : '0 1px 2px rgba(0,0,0,0.05)'
                             }}
                         >
                             {category.name || `Cat ${category.id}`}
