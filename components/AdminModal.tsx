@@ -124,14 +124,15 @@ export default function AdminModal({ isOpen, onClose }: { isOpen: boolean; onClo
                 ) : (
                     <form onSubmit={handleSave}>
                         <div style={{ marginBottom: '1rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Owner Email</label>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Owner Emails</label>
                             <input
-                                type="email"
+                                type="text"
                                 value={settings.owner_email}
                                 onChange={e => setSettings({ ...settings, owner_email: e.target.value })}
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '1rem' }}
+                                placeholder="email1@example.com, email2@example.com"
                             />
-                            <small style={{ color: '#64748b', display: 'block', marginTop: '0.25rem' }}>This email controls dashboard access.</small>
+                            <small style={{ color: '#64748b', display: 'block', marginTop: '0.25rem' }}>Separate multiple emails with commas. These users can access the dashboard.</small>
                         </div>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>New Admin Password</label>
