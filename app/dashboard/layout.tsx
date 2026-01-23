@@ -12,7 +12,7 @@ export default async function DashboardLayout({
     // Strict Check: If logged in user is NOT the owner
     const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-    if (!isOwner(userEmail)) {
+    if (!await isOwner(userEmail)) {
         return (
             <div style={{
                 height: '100vh',
