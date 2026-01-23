@@ -1,0 +1,8 @@
+--- INVESTIGATION: aldennoronhaschool@gmail.com ---
+ENV OWNER_EMAIL items: [ 'aldenengineeringentranceexam@gmail.com' ]
+Checking ENV: NOT FOUND in .env
+DB OWNER_EMAIL items: [ 'aldenengineeringentranceexam@gmail.com' ]
+Checking DB:  NOT FOUND in Database
+
+RESULT: This email SHOULD BE BLOCKED. If it is getting in, the code logic might be cached or incorrect.
+Action: I will force a hard reset.
