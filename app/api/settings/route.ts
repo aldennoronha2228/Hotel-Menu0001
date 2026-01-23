@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         const user = await currentUser();
         const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-        if (!isOwner(userEmail)) {
+        if (!await isOwner(userEmail)) {
             return NextResponse.json(
                 { error: 'Unauthorized: Only owners can update settings' },
                 { status: 401 }

@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
             const user = await currentUser();
             const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-            if (isOwner(userEmail)) {
+            if (await isOwner(userEmail)) {
                 isAdmin = true;
                 if (!supabaseAdmin) {
                     return NextResponse.json({ error: 'Server Config Error: SUPABASE_SERVICE_ROLE_KEY is missing' }, { status: 500 });

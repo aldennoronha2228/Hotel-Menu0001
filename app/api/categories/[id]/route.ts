@@ -19,7 +19,7 @@ export async function PUT(
         const user = await currentUser();
         const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-        if (!isOwner(userEmail)) {
+        if (!await isOwner(userEmail)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -59,7 +59,7 @@ export async function DELETE(
         const user = await currentUser();
         const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-        if (!isOwner(userEmail)) {
+        if (!await isOwner(userEmail)) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

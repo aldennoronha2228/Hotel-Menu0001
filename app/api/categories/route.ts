@@ -38,12 +38,9 @@ export async function POST(request: NextRequest) {
         const user = await currentUser();
         const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
-        if (!process.env.OWNER_EMAIL) {
-            console.error('OWNER_EMAIL not set in environment variables');
-            return NextResponse.json({ error: 'Server Authorization Config Missing' }, { status: 500 });
-        }
 
-        if (!isOwner(userEmail)) {
+
+        if (!await isOwner(userEmail)) {
             console.warn(`Unauthorized access attempt by ${userEmail}`);
             return NextResponse.json({ error: 'Unauthorized: You are not the owner' }, { status: 401 });
         }

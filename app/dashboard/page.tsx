@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Order } from '@/lib/types';
 import FloorPlan from '@/components/FloorPlan';
+import AdminModal from '@/components/AdminModal';
 
 export default function DashboardPage() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -12,6 +13,7 @@ export default function DashboardPage() {
     const [showAll, setShowAll] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [tables, setTables] = useState<number[]>(Array.from({ length: 15 }, (_, i) => i + 1));
+    const [showAdminModal, setShowAdminModal] = useState(false);
 
     // Load table count from DATABASE (with localStorage fallback)
     useEffect(() => {
@@ -205,6 +207,24 @@ export default function DashboardPage() {
                         )}
                     </p>
                 </div>
+                <div>
+                    <button
+                        onClick={() => setShowAdminModal(true)}
+                        style={{
+                            padding: '0.5rem 1rem',
+                            backgroundColor: 'white',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontWeight: 600
+                        }}
+                    >
+                        ⚙️ Admin Settings
+                    </button>
+                </div>
             </header>
 
             {error && (
@@ -221,11 +241,12 @@ export default function DashboardPage() {
                     margin: '0 auto 1.5rem auto'
                 }}>
                     ⚠️ {error} <br />
-                    <span style={{ fontWeight: 400, fontSize: '0.9rem', display: 'block', marginTop: '0.5rem' }}>
-                        Action Required: Go to your Hosting Settings (Environment Variables) and ensure <code>OWNER_EMAIL</code> is set correctly.
-                    </span>
+                    <div style={{ fontWeight: 400, fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                        Action Required: Go to <b>Admin Settings</b> (gear icon) or your Hosting/Environment Variables and ensure <code>OWNER_EMAIL</code> is set correctly.
+                    </div>
                 </div>
-            )}
+            )
+            }
 
             {/* Mini Map Section */}
             <div style={{ marginBottom: '1.5rem' }}>
@@ -395,38 +416,45 @@ export default function DashboardPage() {
                 })}
             </div>
 
-            {!showAll && sortedOrders.length > 5 && (
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => setShowAll(true)}
-                        style={{ width: '100%', maxWidth: '300px' }}
-                    >
-                        Show All Orders ({sortedOrders.length - 5} more)
-                    </button>
-                </div>
-            )}
+            {
+                !showAll && sortedOrders.length > 5 && (
+                    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowAll(true)}
+                            style={{ width: '100%', maxWidth: '300px' }}
+                        >
+                            Show All Orders ({sortedOrders.length - 5} more)
+                        </button>
+                    </div>
+                )
+            }
 
-            {showAll && sortedOrders.length > 5 && (
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => setShowAll(false)}
-                        style={{ width: '100%', maxWidth: '300px' }}
-                    >
-                        Show Less
-                    </button>
-                </div>
-            )}
+            {
+                showAll && sortedOrders.length > 5 && (
+                    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => setShowAll(false)}
+                            style={{ width: '100%', maxWidth: '300px' }}
+                        >
+                            Show Less
+                        </button>
+                    </div>
+                )
+            }
 
-            {sortedOrders.length === 0 && !error && (
-                <div className="text-center text-secondary" style={{ marginTop: '3rem' }}>
-                    <p>No active orders</p>
-                    <p style={{ fontSize: 'var(--font-size-sm)', marginTop: '0.5rem' }}>
-                        New orders will appear here
-                    </p>
-                </div>
-            )}
+            {
+                sortedOrders.length === 0 && !error && (
+                    <div className="text-center text-secondary" style={{ marginTop: '3rem' }}>
+                        <p>No active orders</p>
+                        <p style={{ fontSize: 'var(--font-size-sm)', marginTop: '0.5rem' }}>
+                            New orders will appear here
+                        </p>
+                    </div>
+                )
+            }
+            <AdminModal isOpen={showAdminModal} onClose={() => setShowAdminModal(false)} />
         </>
     );
 }
