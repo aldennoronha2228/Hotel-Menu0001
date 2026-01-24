@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Order } from '@/lib/types';
+import { Order, CartItem } from '@/lib/types';
 import FloorPlan, { LayoutItem } from '@/components/FloorPlan';
 import AdminModal from '@/components/AdminModal';
+import AddItemsModal from '@/components/AddItemsModal';
 
 export default function DashboardPage() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -16,6 +17,7 @@ export default function DashboardPage() {
     const [positions, setPositions] = useState<LayoutItem[] | undefined>(undefined);
     const [showAdminModal, setShowAdminModal] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
     const loadTableCount = async () => {
         try {
@@ -153,6 +155,26 @@ export default function DashboardPage() {
         }
     };
 
+
+    const handleUpdateOrderItems = async (orderId: string, updatedItems: CartItem[], newTotal: number) => {
+        try {
+            const response = await fetch(`/api/orders/${orderId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items: updatedItems, total: newTotal }),
+            });
+
+            if (response.ok) {
+                // Update local state
+                setOrders(prev => prev.map(o => o.id === orderId ? { ...o, items: updatedItems, total: newTotal } : o));
+            } else {
+                alert("Failed to update order items");
+            }
+        } catch (error) {
+            console.error("Failed to update items", error);
+            alert("Error updating items");
+        }
+    };
 
     const deleteOrder = async (orderId: string) => {
         if (!confirm('Are you sure you want to delete this order?')) return;
@@ -410,11 +432,64 @@ export default function DashboardPage() {
 
                             <div className="order-items" style={{ marginBottom: '1rem', flex: 1 }}>
                                 {order.items.map((item, index) => (
-                                    <div key={index} className="order-item" style={{ padding: '0.35rem 0' }}>
-                                        <span>{item.name}</span>
-                                        <span className="item-quantity">×{item.quantity}</span>
+                                    <div key={index} className="order-item" style={{ padding: '0.35rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                            <span>{item.name}</span>
+                                            <span className="item-quantity" style={{ fontWeight: 600 }}>×{item.quantity}</span>
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (item.quantity > 1) {
+                                                    if (confirm(`Reduce quantity of "${item.name}" to ${item.quantity - 1}?`)) {
+                                                        const newItems = [...order.items];
+                                                        newItems[index] = { ...item, quantity: item.quantity - 1 };
+                                                        const newTotal = order.total - item.price;
+                                                        handleUpdateOrderItems(order.id, newItems, newTotal);
+                                                    }
+                                                } else {
+                                                    if (confirm(`Remove "${item.name}" from this order?`)) {
+                                                        const newItems = order.items.filter((_, i) => i !== index);
+                                                        const newTotal = order.total - item.price;
+                                                        handleUpdateOrderItems(order.id, newItems, newTotal);
+                                                    }
+                                                }
+                                            }}
+                                            style={{
+                                                fontSize: '0.75rem',
+                                                color: '#ef4444',
+                                                background: 'none',
+                                                border: '1px solid #ef4444',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                padding: '0 0.3rem',
+                                                height: '20px',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                opacity: 0.6
+                                            }}
+                                            title={item.quantity > 1 ? "Reduce Quantity" : "Remove Item"}
+                                        >
+                                            {item.quantity > 1 ? '−' : '✕'}
+                                        </button>
                                     </div>
                                 ))}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setEditingOrder(order); }}
+                                    style={{
+                                        marginTop: '0.5rem',
+                                        fontSize: '0.8rem',
+                                        color: '#3b82f6',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        display: 'flex', alignItems: 'center', gap: '4px'
+                                    }}
+                                >
+                                    + Add Item
+                                </button>
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', fontWeight: 600 }}>
@@ -457,19 +532,7 @@ export default function DashboardPage() {
                 })}
             </div>
 
-            {
-                !showAll && sortedOrders.length > 5 && (
-                    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                        <button
-                            className="btn btn-secondary"
-                            onClick={() => setShowAll(true)}
-                            style={{ width: '100%', maxWidth: '300px' }}
-                        >
-                            Show All Orders ({sortedOrders.length - 5} more)
-                        </button>
-                    </div>
-                )
-            }
+            {/* ... pagination ... */}
 
             {
                 showAll && sortedOrders.length > 5 && (
@@ -496,6 +559,14 @@ export default function DashboardPage() {
                 )
             }
             <AdminModal isOpen={showAdminModal} onClose={() => setShowAdminModal(false)} />
+            {editingOrder && (
+                <AddItemsModal
+                    isOpen={!!editingOrder}
+                    onClose={() => setEditingOrder(null)}
+                    currentOrder={editingOrder}
+                    onUpdateOrder={handleUpdateOrderItems}
+                />
+            )}
         </>
     );
 }

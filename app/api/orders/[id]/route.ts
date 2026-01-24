@@ -10,27 +10,60 @@ export async function PATCH(
     try {
         const body = await request.json();
         const { id } = await context.params;
-        const { status } = body;
+        const { status, items, total } = body;
 
-        console.log('PATCH /api/orders/[id] - Updating order:', id, 'to status:', status);
+        console.log('PATCH /api/orders/[id] - Updating order:', id, { status, itemsLen: items?.length, total });
 
         // Use admin client to bypass RLS
         const client = supabaseAdmin || supabase;
 
-        const { data, error } = await client
-            .from('orders')
-            .update({ status })
-            .eq('id', id)
-            .select()
-            .single();
+        // 1. Update Orders Table (Status & Total)
+        const updates: any = {};
+        if (status) updates.status = status;
+        if (total !== undefined) updates.total = total;
 
-        if (error) {
-            console.error('Database error:', error);
-            throw error;
+        if (Object.keys(updates).length > 0) {
+            const { error } = await client
+                .from('orders')
+                .update(updates)
+                .eq('id', id);
+
+            if (error) throw error;
         }
 
-        console.log('Order updated successfully:', data);
-        return NextResponse.json(data);
+        // 2. Update Items if provided
+        if (items && Array.isArray(items)) {
+            // Delete existing items for this order
+            const { error: deleteError } = await client
+                .from('order_items')
+                .delete()
+                .eq('order_id', id);
+
+            if (deleteError) throw deleteError;
+
+            // Insert new items
+            if (items.length > 0) {
+                const orderItems = items.map((item: any) => {
+                    // Check if ID is a valid UUID
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
+                    return {
+                        order_id: id,
+                        menu_item_id: isUuid ? item.id : null,
+                        item_name: item.name,
+                        item_price: item.price,
+                        quantity: item.quantity
+                    };
+                });
+
+                const { error: insertError } = await client
+                    .from('order_items')
+                    .insert(orderItems);
+
+                if (insertError) throw insertError;
+            }
+        }
+
+        return NextResponse.json({ success: true, updated: true });
     } catch (error: any) {
         console.error('Error updating order:', error);
         return NextResponse.json(
