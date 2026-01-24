@@ -15,39 +15,20 @@ export default function DashboardPage() {
     const [tables, setTables] = useState<number[]>(Array.from({ length: 15 }, (_, i) => i + 1));
     const [positions, setPositions] = useState<LayoutItem[] | undefined>(undefined);
     const [showAdminModal, setShowAdminModal] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // Load table count from DATABASE (with localStorage fallback)
-    useEffect(() => {
-        const loadTableCount = async () => {
-            try {
-                const response = await fetch('/api/settings');
-                if (response.ok) {
-                    const data = await response.json();
-                    const count = data.table_count || 15;
-                    setTables(Array.from({ length: count }, (_, i) => i + 1));
-                    if (data.table_layout) {
-                        setPositions(data.table_layout);
-                    }
-                } else {
-                    // Fallback to localStorage
-                    const savedCount = localStorage.getItem('tableCount');
-                    if (savedCount) {
-                        const count = parseInt(savedCount);
-                        if (!isNaN(count) && count > 0) {
-                            setTables(Array.from({ length: count }, (_, i) => i + 1));
-                        } else {
-                            setTables(Array.from({ length: 15 }, (_, i) => i + 1));
-                        }
-                    }
-                    const savedLayout = localStorage.getItem('tableLayout');
-                    if (savedLayout) {
-                        try {
-                            setPositions(JSON.parse(savedLayout));
-                        } catch (e) { console.error(e); }
-                    }
+    const loadTableCount = async () => {
+        try {
+            const response = await fetch('/api/settings');
+            if (response.ok) {
+                const data = await response.json();
+                const count = data.table_count || 15;
+                setTables(Array.from({ length: count }, (_, i) => i + 1));
+                if (data.table_layout) {
+                    setPositions(data.table_layout);
                 }
-            } catch (error) {
-                console.error('Failed to load table count, using localStorage:', error);
+            } else {
+                // Fallback to localStorage
                 const savedCount = localStorage.getItem('tableCount');
                 if (savedCount) {
                     const count = parseInt(savedCount);
@@ -64,10 +45,32 @@ export default function DashboardPage() {
                     } catch (e) { console.error(e); }
                 }
             }
-        };
+        } catch (error) {
+            console.error('Failed to load table count, using localStorage:', error);
+            // Fallback content... (omitted for brevity, keep existing logic if possible, but for this replacement assume simplified error handling is OK or copy full)
+            // Copying full fallback for safety:
+            const savedCount = localStorage.getItem('tableCount');
+            if (savedCount) {
+                const count = parseInt(savedCount);
+                if (!isNaN(count) && count > 0) {
+                    setTables(Array.from({ length: count }, (_, i) => i + 1));
+                } else {
+                    setTables(Array.from({ length: 15 }, (_, i) => i + 1));
+                }
+            }
+            const savedLayout = localStorage.getItem('tableLayout');
+            if (savedLayout) {
+                try {
+                    setPositions(JSON.parse(savedLayout));
+                } catch (e) { console.error(e); }
+            }
+        }
+    };
 
+    // Load table count from DATABASE (with localStorage fallback)
+    useEffect(() => {
         loadTableCount();
-    }, []);
+    }, [refreshTrigger]);
 
     // Fetch orders from API
     useEffect(() => {
@@ -293,6 +296,26 @@ export default function DashboardPage() {
                     >
                         <span style={{ fontSize: '0.7rem' }}>{showMap ? '▼' : '▶'}</span>
                         <span>Restaurant Overview</span>
+
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setRefreshTrigger(prev => prev + 1);
+                            }}
+                            className="btn-secondary"
+                            style={{
+                                marginLeft: '0.5rem',
+                                padding: '0.1rem 0.4rem',
+                                fontSize: '0.7rem',
+                                height: 'auto',
+                                minHeight: 'auto',
+                                display: 'flex', alignItems: 'center', gap: '4px'
+                            }}
+                            title="Refresh Map Layout"
+                        >
+                            🔄
+                        </button>
+
                         {showMap && <span style={{ fontSize: '0.65rem', fontWeight: 400, marginLeft: 'auto', color: '#94a3b8' }}>Click table to filter</span>}
                     </div>
 

@@ -157,11 +157,16 @@ export default function TablesPage() {
 
     }, [tables]);
 
+    const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+
+    // ... (existing code)
+
     // Save layout to DATABASE (and localStorage as backup)
     useEffect(() => {
         if (!isLoaded) return;
 
         if (positions.length > 0) {
+            setSaveStatus('saving');
             // Save to database
             const saveSettings = async () => {
                 try {
@@ -173,17 +178,29 @@ export default function TablesPage() {
                             table_layout: positions
                         })
                     });
+                    setSaveStatus('saved');
                 } catch (error) {
                     console.error('Failed to save settings to database:', error);
+                    setSaveStatus('error');
                 }
             };
 
+            // Debounce slightly to avoid flicker on rapid moves? 
+            // No, direct save is safer for now.
             saveSettings();
+
             // Also save to localStorage as backup
             localStorage.setItem('tableLayout', JSON.stringify(positions));
             localStorage.setItem('tableCount', tableCount.toString());
         }
     }, [positions, tableCount, isLoaded]);
+
+    // ... (render)
+    <span style={{ fontSize: '0.9rem', color: saveStatus === 'saving' ? '#eab308' : '#6b7280', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        {saveStatus === 'saving' && '⏳ Saving...'}
+        {saveStatus === 'saved' && '✅ All changes saved'}
+        {saveStatus === 'error' && '⚠️ Save failed'}
+    </span>
 
     const handleDownloadQR = (tableNumber: number) => {
         const qrDataUrl = qrCodes[tableNumber];
@@ -350,6 +367,11 @@ export default function TablesPage() {
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.9rem', color: saveStatus === 'saving' ? '#eab308' : '#6b7280', marginRight: '0.5rem', fontWeight: 500 }}>
+                            {saveStatus === 'saving' && '⏳ Saving...'}
+                            {saveStatus === 'saved' && '✅ All changes saved'}
+                            {saveStatus === 'error' && '⚠️ Save failed'}
+                        </span>
                         <button
                             onClick={savePreset}
                             className="btn btn-primary btn-sm"
