@@ -9,6 +9,7 @@ export default function TablesPage() {
     const [tableCount, setTableCount] = useState(15);
     const [tables, setTables] = useState<number[]>([]);
     const [qrCodes, setQrCodes] = useState<{ [key: number]: string }>({});
+    const [isLoaded, setIsLoaded] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     // Floor plan state (Controlled)
@@ -76,6 +77,8 @@ export default function TablesPage() {
                 if (savedLayout) {
                     setPositions(JSON.parse(savedLayout));
                 }
+            } finally {
+                setIsLoaded(true);
             }
         };
 
@@ -156,6 +159,8 @@ export default function TablesPage() {
 
     // Save layout to DATABASE (and localStorage as backup)
     useEffect(() => {
+        if (!isLoaded) return;
+
         if (positions.length > 0) {
             // Save to database
             const saveSettings = async () => {
@@ -178,7 +183,7 @@ export default function TablesPage() {
             localStorage.setItem('tableLayout', JSON.stringify(positions));
             localStorage.setItem('tableCount', tableCount.toString());
         }
-    }, [positions, tableCount]);
+    }, [positions, tableCount, isLoaded]);
 
     const handleDownloadQR = (tableNumber: number) => {
         const qrDataUrl = qrCodes[tableNumber];
@@ -215,6 +220,61 @@ export default function TablesPage() {
             rotation: 0
         };
         setPositions(prev => [...prev, newDesk]);
+    };
+
+    interface SavedLayout {
+        id: number;
+        name: string;
+        layout: LayoutItem[];
+        count: number;
+        date: string;
+    }
+
+    const [savedLayouts, setSavedLayouts] = useState<SavedLayout[]>([]);
+    const [showPresets, setShowPresets] = useState(false);
+
+    // Load presets from LocalStorage on mount
+    useEffect(() => {
+        const activePresets = localStorage.getItem('floorPlanPresets');
+        if (activePresets) {
+            try {
+                setSavedLayouts(JSON.parse(activePresets));
+            } catch (e) {
+                console.error("Failed to parse presets", e);
+            }
+        }
+    }, []);
+
+    const savePreset = () => {
+        const name = prompt("Enter a name for this layout:");
+        if (!name) return;
+
+        const newPreset: SavedLayout = {
+            id: Date.now(),
+            name,
+            layout: positions,
+            count: tableCount,
+            date: new Date().toLocaleDateString()
+        };
+
+        const updated = [...savedLayouts, newPreset];
+        setSavedLayouts(updated);
+        localStorage.setItem('floorPlanPresets', JSON.stringify(updated));
+        alert("Layout saved!");
+    };
+
+    const loadPreset = (preset: SavedLayout) => {
+        if (!confirm(`Load layout "${preset.name}"? Unsaved changes will be lost.`)) return;
+        setTableCount(preset.count);
+        setPositions(preset.layout);
+        setShowPresets(false);
+    };
+
+    const deletePreset = (id: number) => {
+        if (!confirm("Delete this saved layout?")) return;
+        const updated = savedLayouts.filter(p => p.id !== id);
+        setSavedLayouts(updated);
+        localStorage.setItem('floorPlanPresets', JSON.stringify(updated));
     };
 
     const handleDelete = (itemId: string) => {
@@ -289,9 +349,80 @@ export default function TablesPage() {
                         </button>
                     </div>
 
-                    <span style={{ fontSize: '0.9rem', color: '#6b7280', marginLeft: 'auto' }}>
-                        Changes are saved automatically
-                    </span>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto', alignItems: 'center' }}>
+                        <button
+                            onClick={savePreset}
+                            className="btn btn-primary btn-sm"
+                            style={{ backgroundColor: '#059669', color: 'white', border: 'none', opacity: isLoaded ? 1 : 0.5 }}
+                            disabled={!isLoaded}
+                        >
+                            💾 Save Layout
+                        </button>
+                        <div style={{ position: 'relative' }}>
+                            <button
+                                onClick={() => setShowPresets(!showPresets)}
+                                className="btn btn-secondary btn-sm"
+                            >
+                                📂 Load ({savedLayouts.length})
+                            </button>
+
+                            {showPresets && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    right: 0,
+                                    marginTop: '0.5rem',
+                                    backgroundColor: 'white',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '8px',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    width: '250px',
+                                    zIndex: 50,
+                                    padding: '0.5rem'
+                                }}>
+                                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: '#64748b' }}>Saved Layouts</h4>
+                                    {savedLayouts.length === 0 ? (
+                                        <div style={{ fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>No saved layouts</div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                                            {savedLayouts.map(preset => (
+                                                <div key={preset.id} style={{
+                                                    padding: '0.5rem',
+                                                    backgroundColor: '#f8fafc',
+                                                    borderRadius: '4px',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <div style={{ overflow: 'hidden' }}>
+                                                        <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{preset.name}</div>
+                                                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{preset.count} tables • {preset.date}</div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                        <button
+                                                            onClick={() => loadPreset(preset)}
+                                                            className="btn-primary"
+                                                            style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', height: 'auto', minHeight: 'auto' }}
+                                                            title="Load"
+                                                        >
+                                                            Load
+                                                        </button>
+                                                        <button
+                                                            onClick={() => deletePreset(preset.id)}
+                                                            style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
+                                                            title="Delete"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </header>
 

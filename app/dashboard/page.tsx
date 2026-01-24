@@ -200,10 +200,10 @@ export default function DashboardPage() {
 
     return (
         <>
-            <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <div>
-                    <h1>Live Orders</h1>
-                    <p className="text-secondary">
+                    <h1 style={{ fontSize: '1.5rem', marginBottom: '0.2rem' }}>Live Orders</h1>
+                    <p className="text-secondary" style={{ fontSize: '0.9rem' }}>
                         {orders.filter(o => o.status !== 'paid').length} active orders
                         {selectedTable && (
                             <span
@@ -227,7 +227,7 @@ export default function DashboardPage() {
                     <button
                         onClick={() => setShowAdminModal(true)}
                         style={{
-                            padding: '0.5rem 1rem',
+                            padding: '0.4rem 0.8rem',
                             backgroundColor: 'white',
                             border: '1px solid #e2e8f0',
                             borderRadius: '6px',
@@ -235,7 +235,8 @@ export default function DashboardPage() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.5rem',
-                            fontWeight: 600
+                            fontWeight: 600,
+                            fontSize: '0.9rem'
                         }}
                     >
                         ⚙️ Admin Settings
