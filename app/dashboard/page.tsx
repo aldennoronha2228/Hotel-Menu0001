@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Order } from '@/lib/types';
-import FloorPlan from '@/components/FloorPlan';
+import FloorPlan, { LayoutItem } from '@/components/FloorPlan';
 import AdminModal from '@/components/AdminModal';
 
 export default function DashboardPage() {
@@ -13,6 +13,7 @@ export default function DashboardPage() {
     const [showAll, setShowAll] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [tables, setTables] = useState<number[]>(Array.from({ length: 15 }, (_, i) => i + 1));
+    const [positions, setPositions] = useState<LayoutItem[] | undefined>(undefined);
     const [showAdminModal, setShowAdminModal] = useState(false);
 
     // Load table count from DATABASE (with localStorage fallback)
@@ -24,6 +25,9 @@ export default function DashboardPage() {
                     const data = await response.json();
                     const count = data.table_count || 15;
                     setTables(Array.from({ length: count }, (_, i) => i + 1));
+                    if (data.table_layout) {
+                        setPositions(data.table_layout);
+                    }
                 } else {
                     // Fallback to localStorage
                     const savedCount = localStorage.getItem('tableCount');
@@ -34,6 +38,12 @@ export default function DashboardPage() {
                         } else {
                             setTables(Array.from({ length: 15 }, (_, i) => i + 1));
                         }
+                    }
+                    const savedLayout = localStorage.getItem('tableLayout');
+                    if (savedLayout) {
+                        try {
+                            setPositions(JSON.parse(savedLayout));
+                        } catch (e) { console.error(e); }
                     }
                 }
             } catch (error) {
@@ -46,6 +56,12 @@ export default function DashboardPage() {
                     } else {
                         setTables(Array.from({ length: 15 }, (_, i) => i + 1));
                     }
+                }
+                const savedLayout = localStorage.getItem('tableLayout');
+                if (savedLayout) {
+                    try {
+                        setPositions(JSON.parse(savedLayout));
+                    } catch (e) { console.error(e); }
                 }
             }
         };
@@ -294,6 +310,7 @@ export default function DashboardPage() {
                                 activeTables={activeTableNumbers}
                                 onTableClick={(id) => setSelectedTable(prev => prev === id ? null : id)}
                                 readOnly={true}
+                                positions={positions}
                                 scale={0.55}
                                 height={280}
                             />

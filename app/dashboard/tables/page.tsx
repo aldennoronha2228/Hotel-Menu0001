@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import FloorPlan, { TablePosition } from '@/components/FloorPlan';
+import FloorPlan, { LayoutItem } from '@/components/FloorPlan';
 
 export default function TablesPage() {
     const [viewMode, setViewMode] = useState<'qr' | 'map'>('map');
@@ -12,7 +12,7 @@ export default function TablesPage() {
     const [mounted, setMounted] = useState(false);
 
     // Floor plan state (Controlled)
-    const [positions, setPositions] = useState<TablePosition[]>([]);
+    const [positions, setPositions] = useState<LayoutItem[]>([]);
     const [activeTables, setActiveTables] = useState<number[]>([]);
 
     // Load active orders to show status
@@ -93,26 +93,46 @@ export default function TablesPage() {
         if (tables.length === 0) return;
 
         setPositions(prev => {
-            // Keep existing positions that are still in valid tables
-            let newPositions = prev.filter(p => tables.includes(p.id));
+            let newPositions: LayoutItem[] = [];
+            const seenTableLabels = new Set<string>();
 
-            // identifying missing tables
-            const existingIds = new Set(newPositions.map(p => p.id));
-            const missingTables = tables.filter(id => !existingIds.has(id));
+            // 1. Process existing items, filtering out duplicate tables and invalid tables
+            prev.forEach(item => {
+                if (item.type !== 'table') {
+                    // Keep walls and desks
+                    newPositions.push(item);
+                } else {
+                    // It's a table
+                    const label = item.label || '0';
+                    const tableId = parseInt(label);
 
-            // Add missing tables with default positions
+                    // Only keep if:
+                    // A) It is a valid table number (in current count)
+                    // B) We haven't seen this table number yet (deduplication)
+                    if (tables.includes(tableId) && !seenTableLabels.has(label)) {
+                        newPositions.push(item);
+                        seenTableLabels.add(label);
+                    }
+                }
+            });
+
+            // 2. Identify missing tables
+            const missingTables = tables.filter(id => !seenTableLabels.has(id.toString()));
+
+            // 3. Add missing tables
             if (missingTables.length > 0) {
-                const addedPositions = missingTables.map((id, index) => {
-                    // Try to place them in a grid, continuing from last known pos or just grid
-                    // Simple grid logic based on ID is consistent
-                    return {
-                        id,
-                        x: ((id - 1) % 5) * 120 + 20,
-                        y: Math.floor((id - 1) / 5) * 120 + 20
-                    };
-                });
+                const addedPositions = missingTables.map((id, index) => ({
+                    id: `table-${id}`,
+                    type: 'table' as const,
+                    label: id.toString(),
+                    x: ((id - 1) % 5) * 120 + 20,
+                    y: Math.floor((id - 1) / 5) * 120 + 20,
+                    width: 60,
+                    height: 40
+                }));
                 newPositions = [...newPositions, ...addedPositions];
             }
+
             return newPositions;
         });
 
@@ -171,6 +191,32 @@ export default function TablesPage() {
         document.body.removeChild(link);
     };
 
+    const addWall = () => {
+        const newWall: LayoutItem = {
+            id: `wall-${Date.now()}`,
+            type: 'wall',
+            x: 50,
+            y: 50,
+            width: 150,
+            height: 10,
+            rotation: 0
+        };
+        setPositions(prev => [...prev, newWall]);
+    };
+
+    const addDesk = () => {
+        const newDesk: LayoutItem = {
+            id: `desk-${Date.now()}`,
+            type: 'desk',
+            x: 100,
+            y: 100,
+            width: 100,
+            height: 60,
+            rotation: 0
+        };
+        setPositions(prev => [...prev, newDesk]);
+    };
+
     return (
         <>
             <header className="dashboard-header" style={{ marginBottom: '1rem' }}>
@@ -203,7 +249,8 @@ export default function TablesPage() {
                     border: '1px solid #e2e8f0',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '1rem'
+                    gap: '1rem',
+                    flexWrap: 'wrap'
                 }}>
                     <label style={{ fontWeight: 600, color: '#4b5563' }}>Total Tables:</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -221,8 +268,21 @@ export default function TablesPage() {
                             style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                         >+</button>
                     </div>
+
+                    <div style={{ width: '1px', height: '24px', backgroundColor: '#e2e8f0', margin: '0 1rem' }}></div>
+
+                    {/* Editor Controls */}
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={addWall} className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            🧱 Add Wall
+                        </button>
+                        <button onClick={addDesk} className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            🖥️ Add Desk
+                        </button>
+                    </div>
+
                     <span style={{ fontSize: '0.9rem', color: '#6b7280', marginLeft: 'auto' }}>
-                        Changes are saved automatically to this device
+                        Changes are saved automatically
                     </span>
                 </div>
             </header>
@@ -237,6 +297,9 @@ export default function TablesPage() {
                         onPositionsChange={setPositions}
                         scale={typeof window !== 'undefined' && window.innerWidth < 768 ? 0.5 : 1}
                     />
+                    <div style={{ textAlign: 'center', color: '#64748b', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                        Drag to move • Click wall to show controls • Drag dots to Rotate/Resize
+                    </div>
                 </div>
             ) : (
                 <div className="tables-grid">
