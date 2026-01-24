@@ -29,13 +29,20 @@ export default function AddItemsModal({ isOpen, onClose, currentOrder, onUpdateO
         try {
             setLoading(true);
             const [itemsRes, catsRes] = await Promise.all([
-                fetch('/api/menu-items?details=true'), // Assuming this returns logic
+                fetch('/api/menu-items?details=true'),
                 fetch('/api/categories')
             ]);
 
             if (itemsRes.ok && catsRes.ok) {
-                const items = await itemsRes.json();
+                const itemsData = await itemsRes.json();
                 const cats = await catsRes.json();
+
+                // Map the nested category object to a flat string to match MenuItem type
+                const items = itemsData.map((item: any) => ({
+                    ...item,
+                    category: item.categories?.name || 'Uncategorized'
+                }));
+
                 setMenuItems(items);
                 setCategories(cats);
             }
