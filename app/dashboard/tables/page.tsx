@@ -217,6 +217,14 @@ export default function TablesPage() {
         setPositions(prev => [...prev, newDesk]);
     };
 
+    const handleDelete = (itemId: string) => {
+        if (itemId.startsWith('table-')) {
+            alert("To remove a table, please decrease the 'Total Tables' count.");
+            return;
+        }
+        setPositions(prev => prev.filter(p => p.id !== itemId));
+    };
+
     return (
         <>
             <header className="dashboard-header" style={{ marginBottom: '1rem' }}>
@@ -296,6 +304,7 @@ export default function TablesPage() {
                         positions={positions}
                         onPositionsChange={setPositions}
                         scale={typeof window !== 'undefined' && window.innerWidth < 768 ? 0.5 : 1}
+                        onDelete={handleDelete}
                     />
                     <div style={{ textAlign: 'center', color: '#64748b', fontSize: '0.9rem', marginTop: '0.5rem' }}>
                         Drag to move • Click wall to show controls • Drag dots to Rotate/Resize

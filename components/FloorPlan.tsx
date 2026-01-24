@@ -31,6 +31,7 @@ interface FloorPlanProps {
     height?: number | string;
     positions?: LayoutItem[];
     onPositionsChange?: (items: LayoutItem[]) => void;
+    onDelete?: (itemId: string) => void;
 }
 
 const DEFAULT_TABLES = Array.from({ length: 15 }, (_, i) => i + 1);
@@ -43,7 +44,8 @@ export default function FloorPlan({
     scale = 1,
     height = '600px',
     positions: controlledPositions,
-    onPositionsChange
+    onPositionsChange,
+    onDelete
 }: FloorPlanProps) {
 
     // Helper to generate default table layout if nothing exists
@@ -209,21 +211,46 @@ export default function FloorPlan({
         } else if (isResizing) {
             const item = items.find(i => i.id === isResizing);
             if (item) {
-                // Simple horizontal resize logic for now, rotated logic is complex, 
-                // assuming resize handle is always at 'right' relative to rotation.
-                // Distance change from initial click
-                const deltaX = (clientX - startInteraction.current.x) / scale;
-                // Use a simple Max to prevent negative width
-                const newWidth = Math.max(20, startInteraction.current.initialWidth + deltaX);
+                const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+                const currentY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
+                const dx = (currentX - startInteraction.current.x) / scale;
+                const dy = (currentY - startInteraction.current.y) / scale;
+
+                // Project screen movement onto the local X axis of the item to handle rotation correctly
+                const rad = ((startInteraction.current.initialRotation || 0) * Math.PI) / 180;
+                const cos = Math.cos(rad);
+                const sin = Math.sin(rad);
+
+                // Dot product to get magnitude in direction of local width
+                const deltaWidth = (dx * cos) + (dy * sin);
+
+                const newWidth = Math.max(20, startInteraction.current.initialWidth + deltaWidth);
                 updateItem(isResizing, { width: newWidth });
             }
         } else if (isRotating) {
             const item = items.find(i => i.id === isRotating);
             if (item) {
-                // Calculate angle relative to center of item
-                // This requires knowing center. For simplicity, we just use X movement to rotate
-                const deltaX = (clientX - startInteraction.current.x);
-                const newRotation = (startInteraction.current.initialRotation + deltaX) % 360;
+                const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+                // Sensitivity factor
+                const deltaX = (currentX - startInteraction.current.x) * 1.5;
+                let newRotation = (startInteraction.current.initialRotation + deltaX) % 360;
+
+                // Normalize negative angles
+                if (newRotation < 0) newRotation += 360;
+
+                // Snap to 45 degree increments
+                const snapAngles = [0, 45, 90, 135, 180, 225, 270, 315, 360];
+                const threshold = 5; // Degrees
+
+                for (const angle of snapAngles) {
+                    if (Math.abs(newRotation - angle) < threshold) {
+                        newRotation = angle;
+                        if (newRotation === 360) newRotation = 0;
+                        break;
+                    }
+                }
+
                 updateItem(isRotating, { rotation: newRotation });
             }
         }
@@ -352,6 +379,30 @@ export default function FloorPlan({
                                                 zIndex: 20
                                             }}
                                         />
+                                        {/* Delete Button (Top Right) */}
+                                        {onDelete && (
+                                            <div
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onDelete(item.id);
+                                                }}
+                                                onTouchStart={(e) => {
+                                                    e.stopPropagation();
+                                                    onDelete(item.id);
+                                                }}
+                                                style={{
+                                                    position: 'absolute', top: -15, right: -15,
+                                                    width: 20, height: 20, backgroundColor: '#ef4444',
+                                                    borderRadius: '50%', color: 'white', display: 'flex',
+                                                    alignItems: 'center', justifyContent: 'center',
+                                                    cursor: 'pointer', fontSize: '0.8rem', zIndex: 30,
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                                }}
+                                                title="Delete"
+                                            >
+                                                ✕
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
@@ -368,12 +419,12 @@ export default function FloorPlan({
                                 style={{
                                     ...commonStyle,
                                     width: `${item.width || 150}px`,
-                                    height: `${item.height || 10}px`, // Thin wall
+                                    height: `${item.height || 10}px`, // Thickness
                                     backgroundColor: '#334155',
                                     borderRadius: '4px',
                                     zIndex: 5,
-                                    boxShadow: isSelected ? '0 0 0 2px #3b82f6' : 'none'
                                 }}
+                                onClick={(e) => e.stopPropagation()} // Prevent deselection
                             >
                                 {isSelected && !readOnly && (
                                     <>
@@ -395,6 +446,30 @@ export default function FloorPlan({
                                                 zIndex: 20
                                             }}
                                         />
+                                        {/* Delete Button (Top Right) */}
+                                        {onDelete && (
+                                            <div
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onDelete(item.id);
+                                                }}
+                                                onTouchStart={(e) => {
+                                                    e.stopPropagation();
+                                                    onDelete(item.id);
+                                                }}
+                                                style={{
+                                                    position: 'absolute', top: -25, right: -10,
+                                                    width: 20, height: 20, backgroundColor: '#ef4444',
+                                                    borderRadius: '50%', color: 'white', display: 'flex',
+                                                    alignItems: 'center', justifyContent: 'center',
+                                                    cursor: 'pointer', fontSize: '0.8rem', zIndex: 30,
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                                }}
+                                                title="Delete"
+                                            >
+                                                ✕
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
@@ -419,8 +494,32 @@ export default function FloorPlan({
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     color: '#64748b', fontWeight: 600, fontSize: '0.8rem'
                                 }}
+                                onClick={(e) => e.stopPropagation()} // Prevent deselection
                             >
                                 🖥️ DESK
+                                {isSelected && !readOnly && onDelete && (
+                                    <div
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete(item.id);
+                                        }}
+                                        onTouchStart={(e) => {
+                                            e.stopPropagation();
+                                            onDelete(item.id);
+                                        }}
+                                        style={{
+                                            position: 'absolute', top: -10, right: -10,
+                                            width: 20, height: 20, backgroundColor: '#ef4444',
+                                            borderRadius: '50%', color: 'white', display: 'flex',
+                                            alignItems: 'center', justifyContent: 'center',
+                                            cursor: 'pointer', fontSize: '0.8rem', zIndex: 30,
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                        }}
+                                        title="Delete"
+                                    >
+                                        ✕
+                                    </div>
+                                )}
                             </div>
                         );
                     }
