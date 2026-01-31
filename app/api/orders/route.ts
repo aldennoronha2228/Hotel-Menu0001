@@ -82,7 +82,10 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(formattedOrders);
     } catch (error) {
         console.error('Error fetching orders:', error);
-        return NextResponse.json([], { status: 500 });
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'Unknown error occurred' },
+            { status: 500 }
+        );
     }
 }
 

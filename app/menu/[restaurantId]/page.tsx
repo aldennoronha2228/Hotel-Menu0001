@@ -245,7 +245,31 @@ export default function MenuPage({
         <div className="menu-page-wrapper">
             {/* Header */}
             <header className="header-customer">
-                <h1>{mockRestaurant.name}</h1>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                    {mockRestaurant.logo ? (
+                        <div style={{
+                            width: '120px',
+                            height: '120px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            border: '3px solid white',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                            backgroundColor: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            <img
+                                src={mockRestaurant.logo}
+                                alt={mockRestaurant.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                        </div>
+                    ) : (
+                        <h1>{mockRestaurant.name}</h1>
+                    )}
+                    {mockRestaurant.logo && <h1 style={{ fontSize: '1.5rem', marginTop: '0.2rem' }}>{mockRestaurant.name}</h1>}
+                </div>
                 <p className="table-number">Table {tableNumber}</p>
                 {userOrders.length > 0 && (
                     <button

@@ -3,8 +3,8 @@ import { ClerkProvider } from '@clerk/nextjs';
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Restaurant QR Ordering",
-  description: "Modern table-side QR ordering system",
+  title: "Campus Cafe - QR Menu",
+  description: "Fast and easy table-side ordering at Campus Cafe",
 };
 
 export default function RootLayout({

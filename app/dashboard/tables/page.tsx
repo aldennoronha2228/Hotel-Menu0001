@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import FloorPlan, { LayoutItem } from '@/components/FloorPlan';
 
+
+
 export default function TablesPage() {
     const [viewMode, setViewMode] = useState<'qr' | 'map'>('map');
     const [tableCount, setTableCount] = useState(15);
@@ -11,6 +13,9 @@ export default function TablesPage() {
     const [qrCodes, setQrCodes] = useState<{ [key: number]: string }>({});
     const [isLoaded, setIsLoaded] = useState(false);
     const [mounted, setMounted] = useState(false);
+
+
+
 
     // Floor plan state (Controlled)
     const [positions, setPositions] = useState<LayoutItem[]>([]);
@@ -488,6 +493,7 @@ export default function TablesPage() {
                     ))}
                 </div>
             )}
+
         </>
     );
 }
