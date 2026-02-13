@@ -18,6 +18,28 @@ export default function DashboardPage() {
     const [showAdminModal, setShowAdminModal] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+    const [darkMode, setDarkMode] = useState(false);
+
+    // Load dark mode preference from localStorage
+    useEffect(() => {
+        const savedDarkMode = localStorage.getItem('darkMode');
+        if (savedDarkMode === 'true') {
+            setDarkMode(true);
+            document.documentElement.classList.add('dark-mode');
+        }
+    }, []);
+
+    // Toggle dark mode
+    const toggleDarkMode = () => {
+        const newDarkMode = !darkMode;
+        setDarkMode(newDarkMode);
+        localStorage.setItem('darkMode', String(newDarkMode));
+        if (newDarkMode) {
+            document.documentElement.classList.add('dark-mode');
+        } else {
+            document.documentElement.classList.remove('dark-mode');
+        }
+    };
 
     const loadTableCount = async () => {
         try {
@@ -248,7 +270,27 @@ export default function DashboardPage() {
                         )}
                     </p>
                 </div>
-                <div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <button
+                        onClick={toggleDarkMode}
+                        style={{
+                            padding: '0.4rem 0.8rem',
+                            backgroundColor: darkMode ? '#1f2937' : 'white',
+                            color: darkMode ? 'white' : '#1f2937',
+                            border: `1px solid ${darkMode ? '#374151' : '#e2e8f0'}`,
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            transition: 'all 0.2s ease'
+                        }}
+                        title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    >
+                        {darkMode ? '☀️' : '🌙'}
+                    </button>
                     <button
                         onClick={() => setShowAdminModal(true)}
                         style={{
