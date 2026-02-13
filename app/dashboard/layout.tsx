@@ -1,7 +1,6 @@
 import DashboardSidebar from '@/components/DashboardSidebar';
 import { currentUser } from '@clerk/nextjs/server';
 import { isOwner } from '@/lib/auth';
-import './dark-mode.css';
 
 export default async function DashboardLayout({
     children,
