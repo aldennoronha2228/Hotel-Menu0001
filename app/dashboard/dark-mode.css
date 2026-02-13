@@ -1,103 +1,187 @@
 /* Dark Mode Styles */
-:root {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8f9fa;
-    --text-primary: #1f2937;
-    --text-secondary: #64748b;
-    --border-color: #e2e8f0;
-    --card-bg: #ffffff;
-    --card-shadow: rgba(0, 0, 0, 0.05);
+
+/* Apply dark mode to entire page */
+html.dark-mode,
+html.dark-mode body {
+    background-color: #0f172a !important;
+    color: #e2e8f0 !important;
 }
 
-.dark-mode {
-    --bg-primary: #111827;
-    --bg-secondary: #1f2937;
-    --text-primary: #f9fafb;
-    --text-secondary: #9ca3af;
-    --border-color: #374151;
-    --card-bg: #1f2937;
-    --card-shadow: rgba(0, 0, 0, 0.3);
+/* Dashboard Layout */
+html.dark-mode .dashboard {
+    background-color: #0f172a !important;
 }
 
-.dark-mode {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+html.dark-mode .dashboard-main {
+    background-color: #0f172a !important;
 }
 
-.dark-mode .order-card {
-    background-color: var(--card-bg) !important;
-    border-color: var(--border-color) !important;
-    color: var(--text-primary);
-    box-shadow: 0 2px 8px var(--card-shadow);
+/* Sidebar */
+html.dark-mode .dashboard-sidebar {
+    background-color: #1e293b !important;
+    border-right-color: #334155 !important;
 }
 
-.dark-mode .order-card.preparing {
+html.dark-mode .dashboard-sidebar h2 {
+    color: #e2e8f0 !important;
+}
+
+html.dark-mode .dashboard-sidebar nav a {
+    color: #94a3af !important;
+}
+
+html.dark-mode .dashboard-sidebar nav a:hover,
+html.dark-mode .dashboard-sidebar nav a.active {
+    background-color: #334155 !important;
+    color: #fff !important;
+}
+
+/* Header */
+html.dark-mode .dashboard-header h1 {
+    color: #f1f5f9 !important;
+}
+
+html.dark-mode .dashboard-header p,
+html.dark-mode .text-secondary {
+    color: #94a3af !important;
+}
+
+html.dark-mode .dashboard-header span[style*="backgroundColor: '#fff3cd'"] {
+    background-color: #422006 !important;
+    color: #fbbf24 !important;
+}
+
+/* Order Cards */
+html.dark-mode .order-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark-mode .order-card.preparing {
     background-color: #422006 !important;
     border-color: #f59e0b !important;
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2) !important;
 }
 
-.dark-mode .dashboard-header h1,
-.dark-mode .dashboard-header p {
-    color: var(--text-primary);
+html.dark-mode .order-card .order-header,
+html.dark-mode .order-card .order-items,
+html.dark-mode .order-card .order-item {
+    color: #e2e8f0 !important;
 }
 
-.dark-mode .text-secondary {
-    color: var(--text-secondary) !important;
+html.dark-mode .order-time {
+    color: #94a3af !important;
 }
 
-.dark-mode .order-time {
-    color: var(--text-secondary);
+/* Status Badges */
+html.dark-mode .status-badge {
+    color: #1f2937 !important;
 }
 
-.dark-mode .order-items {
-    color: var(--text-primary);
+html.dark-mode .status-badge.new {
+    background-color: #3b82f6 !important;
 }
 
-.dark-mode [style*="backgroundColor: 'white'"],
-.dark-mode [style*="backgroundColor: white"] {
-    background-color: var(--card-bg) !important;
+html.dark-mode .status-badge.preparing {
+    background-color: #f59e0b !important;
 }
 
-/* Restaurant Overview in Dark Mode */
-.dark-mode [style*="backgroundColor: '#f1f5f9'"] {
-    background-color: #374151 !important;
-    color: var(--text-primary) !important;
+html.dark-mode .status-badge.done {
+    background-color: #10b981 !important;
 }
 
-.dark-mode [style*="backgroundColor: 'white'"][style*="border"] {
-    background-color: var(--card-bg) !important;
-    border-color: var(--border-color) !important;
+/* Table Badge */
+html.dark-mode .table-badge {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
 }
 
-/* Status badges */
-.dark-mode .status-badge {
-    color: var(--text-primary);
+html.dark-mode .order-card.preparing .table-badge {
+    background-color: #f59e0b !important;
+    color: #1f2937 !important;
 }
 
-.dark-mode .status-badge.preparing {
-    background-color: #f59e0b;
-    color: #1f2937;
+/* Daily Order Number Badge */
+html.dark-mode div[style*="backgroundColor: '#3b82f6'"] {
+    background-color: #3b82f6 !important;
 }
 
-/* Table badge */
-.dark-mode .table-badge {
-    background-color: var(--bg-secondary) !important;
-    color: var(--text-primary) !important;
+/* Restaurant Overview Section */
+html.dark-mode div[style*="border: '1px solid #e2e8f0'"] {
+    border-color: #334155 !important;
+    background-color: #1e293b !important;
 }
 
-.dark-mode .table-badge[style*="var(--color-primary)"] {
-    background-color: var(--color-primary) !important;
-    color: white !important;
+html.dark-mode div[style*="backgroundColor: '#f1f5f9'"] {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+html.dark-mode div[style*="backgroundColor: 'white'"][style*="padding: '1rem'"] {
+    background-color: #1e293b !important;
 }
 
 /* Buttons */
-.dark-mode .btn-secondary {
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
-    border-color: var(--border-color);
+html.dark-mode button.btn-secondary {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+    border-color: #475569 !important;
 }
 
-/* Floor plan container */
-.dark-mode .floor-plan-container {
-    background-color: var(--card-bg);
+html.dark-mode button.btn-primary {
+    background-color: #2563eb !important;
+    color: white !important;
+}
+
+html.dark-mode button.btn-success {
+    background-color: #10b981 !important;
+    color: white !important;
+}
+
+/* Admin Settings Button - keep it visible */
+html.dark-mode button[style*="backgroundColor: 'white'"] {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+    border-color: #475569 !important;
+}
+
+/* Error Messages */
+html.dark-mode div[style*="backgroundColor: '#fee2e2'"] {
+    background-color: #7f1d1d !important;
+    border-color: #991b1b !important;
+    color: #fecaca !important;
+}
+
+/* No Orders Message */
+html.dark-mode .text-center.text-secondary {
+    color: #94a3af !important;
+}
+
+/* Delete Button */
+html.dark-mode button[style*="color: '#ef4444'"] {
+    color: #f87171 !important;
+}
+
+/* Item Remove Buttons */
+html.dark-mode button[style*="border: '1px solid #ef4444'"] {
+    border-color: #f87171 !important;
+    color: #f87171 !important;
+}
+
+/* Floor Plan */
+html.dark-mode .floor-plan-container {
+    background-color: #1e293b !important;
+}
+
+html.dark-mode .table-item {
+    background-color: #334155 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+html.dark-mode .table-item.active {
+    background-color: #f59e0b !important;
+    color: #1f2937 !important;
 }
