@@ -22,7 +22,7 @@ export const createOrderSchema = z.object({
  * Schema for validating order update requests
  */
 export const updateOrderSchema = z.object({
-    status: z.enum(['new', 'preparing', 'ready', 'delivered', 'paid', 'cancelled']).optional(),
+    status: z.enum(['new', 'preparing', 'done', 'paid', 'cancelled']).optional(),
     items: z.array(
         z.object({
             id: z.string(),
