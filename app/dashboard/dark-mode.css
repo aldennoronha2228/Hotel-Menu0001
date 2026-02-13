@@ -20,10 +20,10 @@ html.dark-mode {
     /* Main background - Dark Blue/Slate */
     --bg-secondary: #1e293b;
     /* Secondary background */
-    --text-primary: #f1f5f9;
-    /* Main text - Very Light Slate */
-    --text-secondary: #94a3b8;
-    /* Secondary text - Light Slate */
+    --text-primary: #f8fafc;
+    /* Main text - Almost White */
+    --text-secondary: #cbd5e1;
+    /* Secondary text - Light Gray */
     --border-color: #334155;
     /* Border color */
     --card-bg: #1e293b;
@@ -37,6 +37,22 @@ html.dark-mode {
 html.dark-mode body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
+}
+
+html.dark-mode h1,
+html.dark-mode h2,
+html.dark-mode h3,
+html.dark-mode h4,
+html.dark-mode h5,
+html.dark-mode h6,
+html.dark-mode p,
+html.dark-mode span,
+html.dark-mode div {
+    color: var(--text-primary);
+}
+
+html.dark-mode .text-secondary {
+    color: var(--text-secondary) !important;
 }
 
 /* =========================================
@@ -57,7 +73,18 @@ html.dark-mode body {
 }
 
 html.dark-mode .dashboard-header-card {
+    background-color: #1e293b !important;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    border: 1px solid #334155;
+}
+
+/* Header Text Specifics */
+html.dark-mode .dashboard-header-card h1 {
+    color: #ffffff !important;
+}
+
+html.dark-mode .dashboard-header-card p {
+    color: #cbd5e1 !important;
 }
 
 /* Base Buttons */
@@ -85,10 +112,16 @@ html.dark-mode .dashboard-header-card {
     color: var(--text-primary);
 }
 
-html.dark-mode .btn-icon:hover,
-html.dark-mode .btn-admin:hover {
+html.dark-mode .btn-icon,
+html.dark-mode .btn-admin {
     background-color: #334155;
     border-color: #475569;
+    color: #ffffff !important;
+}
+
+html.dark-mode .btn-icon:hover,
+html.dark-mode .btn-admin:hover {
+    background-color: #475569;
 }
 
 /* Filter Badge */
@@ -103,8 +136,8 @@ html.dark-mode .btn-admin:hover {
 }
 
 html.dark-mode .filter-badge {
-    background-color: #422006;
-    color: #fcd34d;
+    background-color: #451a03 !important;
+    color: #fbbf24 !important;
     border: 1px solid #78350f;
 }
 
@@ -136,6 +169,11 @@ html.dark-mode .error-banner {
     overflow: hidden;
 }
 
+html.dark-mode .map-container {
+    background-color: #1e293b !important;
+    border-color: #334155;
+}
+
 .map-header {
     padding: 0.5rem 1rem;
     background-color: #f8fafc;
@@ -151,9 +189,10 @@ html.dark-mode .error-banner {
 }
 
 html.dark-mode .map-header {
-    background-color: #0f172a;
+    background-color: #0f172a !important;
     /* Darker header for map */
-    color: var(--text-primary);
+    color: #e2e8f0 !important;
+    border-bottom: 1px solid #334155;
 }
 
 .map-content {
@@ -164,6 +203,16 @@ html.dark-mode .map-header {
     overflow-x: auto;
 }
 
+html.dark-mode .map-content {
+    background-color: #1e293b !important;
+}
+
+/* Fix for the white background in floor plan */
+html.dark-mode .floor-plan-container {
+    background-color: #1e293b !important;
+}
+
+/* Map Buttons */
 .btn-xs {
     padding: 0.1rem 0.4rem;
     font-size: 0.7rem;
@@ -175,11 +224,21 @@ html.dark-mode .map-header {
     border-radius: 4px;
 }
 
+html.dark-mode .btn-xs {
+    background-color: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
 .map-hint {
     font-size: 0.65rem;
     font-weight: 400;
     margin-left: auto;
     color: var(--text-secondary);
+}
+
+html.dark-mode .map-hint {
+    color: #94a3b8 !important;
 }
 
 /* =========================================
@@ -188,16 +247,16 @@ html.dark-mode .map-header {
 /* We target the sidebar classes directly */
 
 html.dark-mode .sidebar {
-    background-color: var(--sidebar-bg) !important;
-    border-right: 1px solid var(--border-color) !important;
+    background-color: #1e293b !important;
+    border-right: 1px solid #334155 !important;
 }
 
 html.dark-mode .sidebar-logo h1 {
-    color: var(--text-primary) !important;
+    color: #ffffff !important;
 }
 
 html.dark-mode .sidebar-nav a {
-    color: var(--text-secondary) !important;
+    color: #cbd5e1 !important;
 }
 
 html.dark-mode .sidebar-nav a:hover,
@@ -208,7 +267,7 @@ html.dark-mode .sidebar-nav a.active {
 }
 
 html.dark-mode .sidebar-nav button {
-    color: var(--text-secondary) !important;
+    color: #cbd5e1 !important;
 }
 
 html.dark-mode .sidebar-nav button:hover {
@@ -228,28 +287,30 @@ html.dark-mode .sidebar-nav button:hover {
 }
 
 html.dark-mode .order-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
 /* Preparing State */
 html.dark-mode .order-card.preparing {
-    background-color: #2a1b06 !important;
-    /* Very dark orange/brown */
+    background-color: #451a03 !important;
+    /* Darker amber background */
     border: 2px solid #d97706 !important;
     /* Amber-600 */
     box-shadow: 0 0 15px rgba(217, 119, 6, 0.15);
 }
 
+/* Table Badge */
 html.dark-mode .table-badge {
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #475569;
 }
 
 html.dark-mode .order-card.preparing .table-badge {
     background-color: #d97706 !important;
-    color: white !important;
+    color: #ffffff !important;
     border: none;
 }
 
@@ -257,12 +318,39 @@ html.dark-mode .order-card.preparing .table-badge {
 html.dark-mode .order-card h3,
 html.dark-mode .order-card span,
 html.dark-mode .order-card div {
-    color: var(--text-primary);
+    color: #e2e8f0 !important;
 }
 
 html.dark-mode .item-quantity {
-    color: #38bdf8 !important;
-    /* Light blue for quantity */
+    color: #60a5fa !important;
+    /* Brighter blue */
+}
+
+/* Status Badges within cards */
+html.dark-mode .status-badge {
+    color: white !important;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+html.dark-mode .status-badge.new {
+    background-color: #2563eb !important;
+    color: white !important;
+}
+
+html.dark-mode .status-badge.preparing {
+    background-color: #d97706 !important;
+    /* Darker amber */
+    color: white !important;
+}
+
+html.dark-mode .status-badge.done {
+    background-color: #059669 !important;
+    /* Darker green */
+    color: white !important;
 }
 
 /* Buttons inside cards */
@@ -276,4 +364,17 @@ html.dark-mode .btn-success {
     background-color: #10b981 !important;
     color: white !important;
     border: none;
+}
+
+/* Table Items (Floor Plan) */
+html.dark-mode .table-item {
+    background-color: #334155 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+html.dark-mode .table-item.active {
+    background-color: #d97706 !important;
+    color: white !important;
+    border-color: #b45309 !important;
 }
