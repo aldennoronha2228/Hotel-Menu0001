@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { requireOwner } from '@/lib/auth-helpers';
+import { updateOrderSchema } from '@/lib/validation-schemas';
+import { ZodError } from 'zod';
 
 // PATCH update order status
 export async function PATCH(
@@ -8,9 +11,16 @@ export async function PATCH(
     context: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Require owner authentication
+        const authResult = await requireOwner();
+        if (authResult instanceof NextResponse) return authResult;
+
         const body = await request.json();
+
+        // Validate request body
+        const validatedData = updateOrderSchema.parse(body);
         const { id } = await context.params;
-        const { status, items, total } = body;
+        const { status, items, total } = validatedData;
 
         console.log('PATCH /api/orders/[id] - Updating order:', id, { status, itemsLen: items?.length, total });
 
@@ -65,6 +75,20 @@ export async function PATCH(
 
         return NextResponse.json({ success: true, updated: true });
     } catch (error: any) {
+        // Handle validation errors
+        if (error instanceof ZodError) {
+            return NextResponse.json(
+                {
+                    error: 'Validation failed',
+                    details: error.issues.map((e: any) => ({
+                        field: e.path.join('.'),
+                        message: e.message
+                    }))
+                },
+                { status: 400 }
+            );
+        }
+
         console.error('Error updating order:', error);
         return NextResponse.json(
             {
@@ -83,6 +107,10 @@ export async function DELETE(
     context: { params: Promise<{ id: string }> }
 ) {
     try {
+        // Require owner authentication
+        const authResult = await requireOwner();
+        if (authResult instanceof NextResponse) return authResult;
+
         const { id } = await context.params;
 
         // Use admin client to bypass RLS

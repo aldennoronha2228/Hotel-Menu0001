@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase';
 import { currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { isOwner } from '@/lib/auth';
+import { createOrderSchema } from '@/lib/validation-schemas';
+import { ZodError } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,7 +95,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { restaurantId, tableNumber, items, total, user_id } = body;
+
+        // Validate request body
+        const validatedData = createOrderSchema.parse(body);
+        const { restaurantId, tableNumber, items, total, user_id } = validatedData;
 
         // Check if Supabase is configured
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -171,6 +176,20 @@ export async function POST(request: NextRequest) {
             { status: 201 }
         );
     } catch (error) {
+        // Handle validation errors
+        if (error instanceof ZodError) {
+            return NextResponse.json(
+                {
+                    error: 'Validation failed',
+                    details: error.issues.map((e: any) => ({
+                        field: e.path.join('.'),
+                        message: e.message
+                    }))
+                },
+                { status: 400 }
+            );
+        }
+
         console.error('Error creating order:', error);
         return NextResponse.json(
             { error: 'Failed to create order. Please check your Supabase configuration.' },

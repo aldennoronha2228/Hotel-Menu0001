@@ -2,12 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function isOwner(email: string | null | undefined): Promise<boolean> {
     if (!email) {
-        console.log('[Auth] No email provided to isOwner check');
+        console.log('[Auth] No email provided to ownership check');
         return false;
     }
     const lowerEmail = email.toLowerCase();
 
-    console.log(`[Auth] Checking ownership for: ${lowerEmail}`);
+    console.log('[Auth] Performing ownership check');
 
     // 1. Check current Environment Variables (Bootstrap/Fallback)
     const envEmails = (process.env.OWNER_EMAIL || '')
@@ -15,7 +15,7 @@ export async function isOwner(email: string | null | undefined): Promise<boolean
         .map(e => e.trim().toLowerCase())
         .filter(e => e.length > 0);
 
-    console.log(`[Auth] Env Owners: ${JSON.stringify(envEmails)}`);
+    console.log('[Auth] Checking environment configuration');
 
     if (envEmails.includes(lowerEmail)) {
         console.log('[Auth] Match found in ENV');
@@ -45,7 +45,7 @@ export async function isOwner(email: string | null | undefined): Promise<boolean
                 .split(',')
                 .map((e: string) => e.trim().toLowerCase());
 
-            console.log(`[Auth] DB Owners: ${JSON.stringify(dbEmails)}`);
+            console.log('[Auth] Checking database configuration');
 
             if (dbEmails.includes(lowerEmail)) {
                 console.log('[Auth] Match found in DB');

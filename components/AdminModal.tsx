@@ -102,7 +102,7 @@ export default function AdminModal({ isOpen, onClose }: { isOpen: boolean; onClo
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
                                 style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '1rem' }}
-                                placeholder="Default: admin123"
+                                placeholder="Enter admin password"
                                 autoFocus
                             />
                         </div>

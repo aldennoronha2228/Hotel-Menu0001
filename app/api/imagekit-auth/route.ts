@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireOwner } from '@/lib/auth-helpers';
 
 // Get ImageKit authentication parameters for client-side upload
 export async function GET() {
     try {
+        // Require owner authentication
+        const authResult = await requireOwner();
+        if (authResult instanceof NextResponse) return authResult;
+
         const response = await fetch(
             `https://api.imagekit.io/v1/params/auth`,
             {

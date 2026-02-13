@@ -32,12 +32,9 @@ export async function POST(req: Request) {
         }
 
         const isValid = await bcrypt.compare(password, data.value);
-        console.log(`Checking pass: '${password}' against hash: '${data.value}' -> Valid: ${isValid}`);
+        console.log(`Password verification result: ${isValid}`);
 
-        // TEMPORARY FALLBACK: Match specific plain text if hash fails (to fix hashing mismatch issues)
-        const isFallbackValid = !isValid && password === 'admin123';
-
-        if (isValid || isFallbackValid) {
+        if (isValid) {
             // Return current settings
             const { data: emailData } = await supabase
                 .from('settings')
@@ -69,9 +66,8 @@ export async function PUT(req: Request) {
         const { data: pwdData } = await supabase.from('settings').select('value').eq('key', 'admin_password').single();
 
         const isValid = pwdData && (await bcrypt.compare(password, pwdData.value));
-        const isFallbackValid = !isValid && password === 'admin123';
 
-        if (!pwdData || (!isValid && !isFallbackValid)) {
+        if (!pwdData || !isValid) {
             return NextResponse.json({ error: 'Unauthorized: Invalid Password' }, { status: 401 });
         }
 
