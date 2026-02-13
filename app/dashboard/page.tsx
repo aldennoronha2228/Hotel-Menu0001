@@ -247,7 +247,7 @@ export default function DashboardPage() {
 
     return (
         <>
-            <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <header className="dashboard-header-card">
                 <div>
                     <h1 style={{ fontSize: '1.5rem', marginBottom: '0.2rem' }}>Live Orders</h1>
                     <p className="text-secondary" style={{ fontSize: '0.9rem' }}>
@@ -255,15 +255,7 @@ export default function DashboardPage() {
                         {selectedTable && (
                             <span
                                 onClick={() => setSelectedTable(null)}
-                                style={{
-                                    cursor: 'pointer',
-                                    color: 'var(--color-primary)',
-                                    fontWeight: 600,
-                                    marginLeft: '0.5rem',
-                                    backgroundColor: '#fff3cd',
-                                    padding: '0.1rem 0.5rem',
-                                    borderRadius: '4px'
-                                }}
+                                className="filter-badge"
                             >
                                 • Filtering Table {selectedTable} (Clear) ✕
                             </span>
@@ -273,38 +265,14 @@ export default function DashboardPage() {
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     <button
                         onClick={toggleDarkMode}
-                        style={{
-                            padding: '0.4rem 0.8rem',
-                            backgroundColor: darkMode ? '#1f2937' : 'white',
-                            color: darkMode ? 'white' : '#1f2937',
-                            border: `1px solid ${darkMode ? '#374151' : '#e2e8f0'}`,
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontWeight: 600,
-                            fontSize: '0.9rem',
-                            transition: 'all 0.2s ease'
-                        }}
+                        className="btn-icon"
                         title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                     >
                         {darkMode ? '☀️' : '🌙'}
                     </button>
                     <button
                         onClick={() => setShowAdminModal(true)}
-                        style={{
-                            padding: '0.4rem 0.8rem',
-                            backgroundColor: 'white',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontWeight: 600,
-                            fontSize: '0.9rem'
-                        }}
+                        className="btn-admin"
                     >
                         ⚙️ Admin Settings
                     </button>
@@ -312,18 +280,7 @@ export default function DashboardPage() {
             </header>
 
             {error && (
-                <div style={{
-                    backgroundColor: '#fee2e2',
-                    border: '1px solid #ef4444',
-                    color: '#b91c1c',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    marginBottom: '1rem',
-                    textAlign: 'center',
-                    fontWeight: 600,
-                    maxWidth: '800px',
-                    margin: '0 auto 1.5rem auto'
-                }}>
+                <div className="error-banner">
                     ⚠️ {error} <br />
                     <div style={{ fontWeight: 400, fontSize: '0.9rem', marginTop: '0.5rem' }}>
                         Action Required: Go to <b>Admin Settings</b> (gear icon) or your Hosting/Environment Variables and ensure <code>OWNER_EMAIL</code> is set correctly.
@@ -334,29 +291,11 @@ export default function DashboardPage() {
 
             {/* Mini Map Section */}
             <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    backgroundColor: 'white'
-                }}>
+                <div className="map-container card">
                     {/* Compact Header Bar */}
                     <div
                         onClick={() => setShowMap(!showMap)}
-                        style={{
-                            padding: '0.35rem 0.75rem',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            color: '#64748b',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.4rem',
-                            cursor: 'pointer',
-                            userSelect: 'none',
-                            backgroundColor: '#f1f5f9',
-                            borderBottom: showMap ? '1px solid #e2e8f0' : 'none',
-                            whiteSpace: 'nowrap'
-                        }}
+                        className="map-header"
                     >
                         <span style={{ fontSize: '0.7rem' }}>{showMap ? '▼' : '▶'}</span>
                         <span>Restaurant Overview</span>
@@ -366,33 +305,18 @@ export default function DashboardPage() {
                                 e.stopPropagation();
                                 setRefreshTrigger(prev => prev + 1);
                             }}
-                            className="btn-secondary"
-                            style={{
-                                marginLeft: '0.5rem',
-                                padding: '0.1rem 0.4rem',
-                                fontSize: '0.7rem',
-                                height: 'auto',
-                                minHeight: 'auto',
-                                display: 'flex', alignItems: 'center', gap: '4px'
-                            }}
+                            className="btn-secondary btn-xs"
                             title="Refresh Map Layout"
                         >
                             🔄
                         </button>
 
-                        {showMap && <span style={{ fontSize: '0.65rem', fontWeight: 400, marginLeft: 'auto', color: '#94a3b8' }}>Click table to filter</span>}
+                        {showMap && <span className="map-hint">Click table to filter</span>}
                     </div>
 
                     {/* Map Area */}
                     {showMap && (
-                        <div style={{
-                            width: '100%',
-                            overflowX: 'auto',
-                            backgroundColor: 'white',
-                            padding: '1rem',
-                            display: 'flex',
-                            justifyContent: 'center'
-                        }}>
+                        <div className="map-content">
                             <FloorPlan
                                 tables={tables}
                                 activeTables={activeTableNumbers}
